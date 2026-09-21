@@ -15,13 +15,15 @@ project-pdl/
 |-- sql/
 |   |-- project_0_db.dump
 |   |-- project-1-denormalized.sql
-|   `-- queries/read/
-|       |-- query_7.sql
-|       |-- query_8.sql
-|       |-- query_9.sql
-|       |-- query_10.sql
-|       |-- query_11.sql
-|       `-- query_12.sql
+|   `-- queries/
+|       |-- read/
+|       |   |-- query_7.sql
+|       |   `-- query_8.sql
+|       `-- dml/
+|           |-- query_9.sql
+|           |-- query_10.sql
+|           |-- query_11.sql
+|           `-- query_12.sql
 |-- scripts/
 |   |-- seed/
 |   |   |-- seed_nosql.py
@@ -29,12 +31,22 @@ project-pdl/
 |   |-- queries/
 |   |   |-- read/query_7.py
 |   |   |-- read/query_8.py
-|   |   `-- dml/dml_5_8.py
+|   |   `-- dml/
+|   |       |-- dml_5_8.py
+|   |       |-- query_9.py
+|   |       |-- query_10.py
+|   |       |-- query_11.py
+|   |       `-- query_12.py
 |   `-- valkey/queries_valkey.py
 `-- results/
     |-- read/query_7.txt
     |-- read/query_8.txt
-    `-- dml/dml_5_8_results.txt
+    `-- dml/
+        |-- dml_5_8_results.txt
+        |-- query_9.txt
+        |-- query_10.txt
+        |-- query_11.txt
+        `-- query_12.txt
 ```
 
 ## 2. Prasyarat
@@ -466,7 +478,7 @@ Jalankan eksperimen DML:
 Script tersebut menjalankan Query 5 sampai 8, membuat index CouchDB yang diperlukan, melakukan warm-up, lalu membandingkan pengukuran sebelum dan sesudah index. Hasilnya disimpan di:
 
 ```text
-results/dml_5_8_results.txt
+results/dml/dml_5_8_results.txt
 ```
 
 DML dapat mengubah data/status di CouchDB dan Valkey. Jika ingin kembali ke snapshot awal yang sama dengan PostgreSQL, jalankan ulang:
@@ -474,6 +486,34 @@ DML dapat mengubah data/status di CouchDB dan Valkey. Jika ingin kembali ke snap
 ```powershell
 .venv\Scripts\python.exe scripts/seed/seed_nosql.py --reset
 ```
+
+### Menjalankan DML 9-12
+
+Query 9 membatalkan pesanan yang melewati batas waktu pembayaran (default 24 jam) dan belum punya pembayaran berhasil. Status pesanan dan pembayaran dibaca/ditulis di Valkey (`status:pesanan:{id}`, `status:pembayaran:{id}`):
+
+```powershell
+.venv\Scripts\python.exe scripts/queries/dml/query_9.py
+```
+
+Query 10 menandai penyewaan selesai setelah pengembaliannya berstatus selesai (default `id_pengembalian=1`). Penyewaan terkait dicari lewat dokumen `pesanan.detail_pesanan[].penyewaan.pengembalian` di CouchDB, status ditulis ke `status:penyewaan:{id}`:
+
+```powershell
+.venv\Scripts\python.exe scripts/queries/dml/query_10.py --id-pengembalian 1
+```
+
+Query 11 menandai produk sedang disewa saat penyewaannya mulai berjalan (default `id_penyewaan=1`), menulis ke `status:produk:{id}`:
+
+```powershell
+.venv\Scripts\python.exe scripts/queries/dml/query_11.py --id-penyewaan 1
+```
+
+Query 12 mengembalikan status produk menjadi tersedia setelah ada pengembalian yang selesai untuk produk tersebut (default `id_produk=1756`):
+
+```powershell
+.venv\Scripts\python.exe scripts/queries/dml/query_12.py --id-produk 1756
+```
+
+Keempatnya menerima flag `--dry-run` untuk hanya menampilkan kandidat tanpa menulis ke Valkey. Sama seperti Query 5-8, jalankan ulang `seed_nosql.py --reset` jika ingin mengembalikan data ke snapshot awal.
 
 ## 19. Lokasi Hasil
 
@@ -487,7 +527,11 @@ results/read/query_8.txt
 Output eksperimen DML disimpan di:
 
 ```text
-results/dml_5_8_results.txt
+results/dml/dml_5_8_results.txt
+results/dml/query_9.txt
+results/dml/query_10.txt
+results/dml/query_11.txt
+results/dml/query_12.txt
 ```
 
 ## 20. Urutan Lengkap Dari Awal
@@ -515,6 +559,10 @@ docker compose ps
 .venv\Scripts\python.exe scripts/queries/read/query_8.py
 .venv\Scripts\python.exe scripts/valkey/queries_valkey.py
 .venv\Scripts\python.exe scripts/queries/dml/dml_5_8.py
+.venv\Scripts\python.exe scripts/queries/dml/query_9.py
+.venv\Scripts\python.exe scripts/queries/dml/query_10.py --id-pengembalian 1
+.venv\Scripts\python.exe scripts/queries/dml/query_11.py --id-penyewaan 1
+.venv\Scripts\python.exe scripts/queries/dml/query_12.py --id-produk 1756
 ```
 
 ## 21. Saat Membuka Project Lagi
