@@ -1,0 +1,26 @@
+services:
+  couchdb:
+    image: apache/couchdb:3.5.2.1
+    container_name: gayang-couchdb
+    environment:
+      COUCHDB_USER: ${COUCH_USER}
+      COUCHDB_PASSWORD: ${COUCH_PASSWORD}
+    ports:
+      - "5984:5984"
+    volumes:
+      - couchdb_data:/opt/couchdb/data
+    restart: unless-stopped
+
+  valkey:
+    image: valkey/valkey:9.1.2
+    container_name: gayang-valkey
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    command: ["valkey-server", "--appendonly", "yes"]
+    restart: unless-stopped
+
+volumes:
+  couchdb_data:
+  valkey_data:
