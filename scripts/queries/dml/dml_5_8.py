@@ -29,7 +29,7 @@ vk = Valkey(
     decode_responses=True,
 )
 
-OUTPUT_FILE = Path(__file__).resolve().parents[3] / "results" / "dml_5_8_results.txt"
+OUTPUT_FILE = Path(__file__).resolve().parents[3] / "results" / "dml" / "dml_5_8_results.txt"
 _log_lines = []
 
 

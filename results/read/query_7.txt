@@ -1,0 +1,13 @@
+=== Query Produk Paling Sering Difavoritkan (NoSQL) ===
+Waktu jalan  : 2026-09-21T20:01:18.437709
+CouchDB      : http://127.0.0.1:5984  DB: gayang
+Valkey       : 127.0.0.1:6379  DB: 0
+
+======================================================================
+HASIL QUERY: PRODUK PALING SERING DIFAVORITKAN
+======================================================================
+waktu query  : 13.511 ms
+produk dihitung dari Valkey : 17233
+jumlah hasil : 1
+
+1. Produk Fashion 9818 (id_produk=9818) - 10 favorit - penjual: Pengguna 1533 (id_penjual=1533)

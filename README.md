@@ -1,67 +1,103 @@
 # Project PDL
 
-Project ini berisi baseline PostgreSQL denormalisasi, seed CouchDB/Valkey, dan query pembanding.
+Project ini berisi eksperimen perbandingan PostgreSQL denormalisasi, CouchDB, dan Valkey. Data utama berasal dari dump Project-0, lalu dibentuk menjadi schema `p1_denorm` sebelum dipindahkan ke layanan NoSQL.
 
-## Struktur
+## Struktur Utama
 
 ```text
 sql/
   project_0_db.dump
   project-1-denormalized.sql
-  queries/
-    produk_favorit_terpopuler.sql
+  queries/read/query_7.sql
 scripts/
-  queries/read/query_produk_favorit_nosql.py
-  queries/dml/dml_5_8.py
   seed/seed_nosql.py
   seed/seed_recent_gagal_kirim.py
+  queries/read/query_7.py
+  queries/dml/dml_5_8.py
   valkey/queries_valkey.py
 results/
   dml_5_8_results.txt
+  produk_favorit_nosql_results.txt
 ```
 
-## Query produk favorit
+## Prasyarat
 
-1. Nyalakan CouchDB dan Valkey:
+- PostgreSQL aktif dan database `gayang` tersedia.
+- Docker Desktop aktif.
+- Virtual environment `.venv` sudah memiliki dependencies dari `requirements.txt`.
+- File `.env` berisi koneksi PostgreSQL, CouchDB, dan Valkey.
 
-```powershell
-docker compose up -d
-docker compose ps
-```
+## Setup Dari Project-0
 
-2. Pastikan PostgreSQL aktif dan `.env` mengarah ke database `gayang`.
-
-3. Jalankan query utama:
-
-```powershell
-.venv\Scripts\python.exe scripts/queries/read/query_produk_favorit_nosql.py
-```
-
-## Setup Project-1 dari Project-0
-
-Restore dump Project-0 terlebih dahulu, lalu buat schema `p1_denorm` dari data tersebut:
+Restore database Project-0, lalu bentuk schema denormalisasi `p1_denorm`:
 
 ```powershell
 pg_restore -h 127.0.0.1 -p 5432 -U postgres --no-owner --no-privileges -d gayang sql/project_0_db.dump
 psql -h 127.0.0.1 -p 5432 -U postgres -d gayang -v ON_ERROR_STOP=1 -f sql/project-1-denormalized.sql
 ```
 
-`project-1-denormalized.sql` membaca tabel Project-0 di schema `public` dan membentuk aggregate di schema `p1_denorm`.
+Script denormalisasi membaca tabel Project-0 dari schema `public` dan membuat aggregate di schema `p1_denorm`.
 
-Setelah itu seed ke CouchDB dan Valkey:
+## Menyalakan Layanan
+
+```powershell
+docker compose up -d
+docker compose ps
+```
+
+## Seed Ke NoSQL
+
+Seed data dari PostgreSQL ke CouchDB dan Valkey:
 
 ```powershell
 .venv\Scripts\python.exe scripts/seed/seed_nosql.py --reset
 ```
 
-Proses seed juga membuat counter agregat favorit di Valkey, sehingga query produk terfavorit tidak perlu memindai seluruh daftar favorit per pengguna.
+Gunakan `--reset` saat ingin membangun ulang database CouchDB dan Valkey dari awal. Proses seed juga membuat counter favorit agregat di Valkey agar query favorit tidak perlu memindai setiap daftar favorit pengguna.
 
-## Cara menjalankan seed dan queries
+Untuk menambahkan data pesanan uji dengan pengiriman gagal terbaru sebelum menjalankan DML:
 
 ```powershell
-python scripts/seed/seed_nosql.py
-python scripts/seed/seed_recent_gagal_kirim.py
-python scripts/queries/dml/dml_5_8.py
-python scripts/valkey/queries_valkey.py
-python scripts/queries/read/query_produk_favorit_nosql.py
+.venv\Scripts\python.exe scripts/seed/seed_recent_gagal_kirim.py
 ```
+
+## Menjalankan Query
+
+Query produk paling sering difavoritkan, mengembalikan semua produk dengan jumlah favorit maksimum:
+
+```powershell
+.venv\Scripts\python.exe scripts/queries/read/query_7.py
+```
+
+Query dan operasi Valkey:
+
+```powershell
+.venv\Scripts\python.exe scripts/valkey/queries_valkey.py
+```
+
+Query DML 5-8 pada CouchDB dan Valkey:
+
+```powershell
+.venv\Scripts\python.exe scripts/queries/dml/dml_5_8.py
+```
+
+Script DML membuat index, menjalankan warm-up, mengukur query sebelum dan sesudah index, lalu menyimpan log hasil.
+
+## Urutan Lengkap Eksperimen
+
+```powershell
+docker compose up -d
+pg_restore -h 127.0.0.1 -p 5432 -U postgres --no-owner --no-privileges -d gayang sql/project_0_db.dump
+psql -h 127.0.0.1 -p 5432 -U postgres -d gayang -v ON_ERROR_STOP=1 -f sql/project-1-denormalized.sql
+.venv\Scripts\python.exe scripts/seed/seed_nosql.py --reset
+.venv\Scripts\python.exe scripts/queries/read/query_produk_favorit_nosql.py
+.venv\Scripts\python.exe scripts/queries/read/query_7.py
+.venv\Scripts\python.exe scripts/queries/dml/dml_5_8.py
+```
+
+## Hasil
+
+Output runtime disimpan di folder `results/`:
+
+- `read/query_7.txt`: hasil query produk favorit.
+- `dml/dml_5_8_results.txt`: log pengukuran DML 5-8.

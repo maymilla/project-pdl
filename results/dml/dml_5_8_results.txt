@@ -1,0 +1,153 @@
+=== Test Query DML 5-8 (CouchDB + Valkey hybrid) ===
+Waktu jalan  : 2026-09-21T20:02:01.017946
+CouchDB URL  : http://127.0.0.1:5984  DB: gayang
+Valkey       : 127.0.0.1:6379 DB 0
+
+======================================================================
+FASE 1: MENJALANKAN SEMUA QUERY SEBELUM ADA INDEX
+======================================================================
+
+======================================================================
+[SEBELUM INDEX] QUERY 5: INSERT riwayat pengiriman ulang
+======================================================================
+waktu round-trip _find      : 11.993 ms
+docs_examined               : 0
+kandidat diperiksa (_find)  : 0
+target gagal_kirim (Valkey) : 0
+
+--- Eksekusi INSERT riwayat pengiriman (maks 3 demo) ---
+
+Total kandidat ditemukan : 0
+Total di-INSERT (demo)   : 0
+
+======================================================================
+[SEBELUM INDEX] QUERY 6: UPDATE pesanan dibatalkan + pembayaran refund
+======================================================================
+waktu round-trip _find     : 262.495 ms
+docs_examined              : 501
+target batal (Valkey)      : 54
+
+--- Eksekusi UPDATE batal + refund (maks 3 demo) ---
+  SET status:pesanan:42104 -> dibatalkan
+  SET status:pesanan:7132 -> dibatalkan
+  SET status:pembayaran:7132 -> refund
+  SET status:pesanan:14992 -> dibatalkan
+  SET status:pembayaran:14992 -> refund
+
+Total kandidat ditemukan : 54
+Total di-UPDATE (demo)   : 3
+
+======================================================================
+[SEBELUM INDEX] QUERY 7: INSERT pesan + room chat baru
+======================================================================
+waktu round-trip _find : 6.980 ms
+docs_examined          : 1
+results_returned       : 1
+
+Room sudah ada: ruang_chat:test_25_10_1789994835 -> INSERT pesan baru ke array pesan_chat
+PUT (INSERT pesan) ke ruang_chat:test_25_10_1789994835 -> 11.829 ms
+SET status:pesan_chat:ruang_chat:test_25_10_1789994835:7 -> terkirim
+
+======================================================================
+[SEBELUM INDEX] QUERY 8: UPDATE status pengiriman (TANPA index -- akses langsung by _id)
+======================================================================
+GET pesanan:1 -> 6.488 ms
+PUT pesanan:1 (UPDATE no_resi & tanggal_kirim) -> 10.057 ms
+SET status:pengiriman:1 -> dikirim
+
+======================================================================
+FASE 2: MEMBUAT SEMUA INDEX
+======================================================================
+Index dibuat: {
+  "result": "exists",
+  "id": "_design/e80d619325d6cdd57802d9230ded0e565130bc7f",
+  "name": "idx-pesanan-tanggal"
+}
+Index dibuat: {
+  "result": "exists",
+  "id": "_design/448c5b6efa8ed96b2ee3374e1673948ff98a2af0",
+  "name": "idx-ruangchat-penjual-pembeli"
+}
+
+Catatan: query 5 & 6 sama-sama memakai index idx-pesanan-tanggal
+(field type + tanggal_pesanan), sehingga cukup 1 index untuk dua-duanya.
+Query 8 sengaja TIDAK diberi index apa pun (akses langsung by _id).
+
+======================================================================
+FASE 3: WARM-UP CALL (hasil dibuang, memaksa index selesai dibangun)
+======================================================================
+
+======================================================================
+[WARM-UP] QUERY 5: INSERT riwayat pengiriman ulang
+======================================================================
+waktu round-trip _find      : 4.125 ms
+docs_examined               : 0
+kandidat diperiksa (_find)  : 0
+target gagal_kirim (Valkey) : 0
+
+======================================================================
+[WARM-UP] QUERY 6: UPDATE pesanan dibatalkan + pembayaran refund
+======================================================================
+waktu round-trip _find     : 112.847 ms
+docs_examined              : 501
+target batal (Valkey)      : 51
+
+======================================================================
+[WARM-UP] QUERY 7: INSERT pesan + room chat baru
+======================================================================
+waktu round-trip _find : 7.184 ms
+docs_examined          : 1
+results_returned       : 1
+
+Total waktu warm-up: 659.802 ms (angka ini TIDAK dipakai sebagai hasil akhir)
+
+======================================================================
+FASE 4: MENJALANKAN SEMUA QUERY SETELAH INDEX + WARM-UP
+======================================================================
+
+======================================================================
+[SETELAH INDEX] QUERY 5: INSERT riwayat pengiriman ulang
+======================================================================
+waktu round-trip _find      : 9.390 ms
+docs_examined               : 0
+kandidat diperiksa (_find)  : 0
+target gagal_kirim (Valkey) : 0
+
+--- Eksekusi INSERT riwayat pengiriman (maks 3 demo) ---
+
+Total kandidat ditemukan : 0
+Total di-INSERT (demo)   : 0
+
+======================================================================
+[SETELAH INDEX] QUERY 6: UPDATE pesanan dibatalkan + pembayaran refund
+======================================================================
+waktu round-trip _find     : 207.608 ms
+docs_examined              : 501
+target batal (Valkey)      : 51
+
+--- Eksekusi UPDATE batal + refund (maks 3 demo) ---
+  SET status:pesanan:33902 -> dibatalkan
+  SET status:pesanan:17241 -> dibatalkan
+  SET status:pesanan:10529 -> dibatalkan
+  SET status:pembayaran:10529 -> refund
+
+Total kandidat ditemukan : 51
+Total di-UPDATE (demo)   : 3
+
+======================================================================
+[SETELAH INDEX] QUERY 7: INSERT pesan + room chat baru
+======================================================================
+waktu round-trip _find : 6.348 ms
+docs_examined          : 1
+results_returned       : 1
+
+Room sudah ada: ruang_chat:test_25_10_1789994835 -> INSERT pesan baru ke array pesan_chat
+PUT (INSERT pesan) ke ruang_chat:test_25_10_1789994835 -> 22.124 ms
+SET status:pesan_chat:ruang_chat:test_25_10_1789994835:8 -> terkirim
+
+======================================================================
+[SETELAH INDEX] QUERY 8: UPDATE status pengiriman (TANPA index -- akses langsung by _id)
+======================================================================
+GET pesanan:1 -> 6.180 ms
+PUT pesanan:1 (UPDATE no_resi & tanggal_kirim) -> 14.912 ms
+SET status:pengiriman:1 -> dikirim

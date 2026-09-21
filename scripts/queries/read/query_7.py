@@ -10,7 +10,7 @@ from valkey import Valkey
 
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
-OUTPUT_FILE = ROOT_DIR / "results" / "produk_favorit_nosql_results.txt"
+OUTPUT_FILE = ROOT_DIR / "results"/ "read" / "query_7.txt"
 
 
 def koneksi_valkey():
