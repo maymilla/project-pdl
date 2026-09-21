@@ -1,26 +1,26 @@
--- Produk yang paling sering dimasukkan ke daftar favorit beserta penjualnya.
--- Parameter :limit digunakan oleh runner Python (psycopg).
 
-WITH jumlah_favorit AS (
-    SELECT
-        favorit.id_produk,
-        COUNT(*) AS total_favorit
-    FROM p1_denorm.produk_favorit_user
-    CROSS JOIN LATERAL unnest(id_produk) AS favorit(id_produk)
-    GROUP BY favorit.id_produk
-)
 SELECT
-    produk.id_produk,
-    produk.nama_produk,
-    produk.id_penjual,
-    penjual.nama AS nama_penjual,
-    jumlah_favorit.total_favorit
-FROM jumlah_favorit
-JOIN p1_denorm.produk AS produk
-    ON produk.id_produk = jumlah_favorit.id_produk
-JOIN p1_denorm.pengguna AS penjual
-    ON penjual.id_pengguna = produk.id_penjual
-ORDER BY
-    jumlah_favorit.total_favorit DESC,
-    produk.id_produk ASC
-LIMIT 10;
+    pr.nama_produk,
+    pe.nama AS nama_penjual,
+    pf.jumlah_favorit
+FROM pengguna pe
+JOIN produk pr
+    ON pr.id_pengguna = pe.id_pengguna
+JOIN (
+    SELECT
+        id_produk,
+        COUNT(*) AS jumlah_favorit
+    FROM produk_favorit
+    GROUP BY id_produk
+) pf
+    ON pr.id_produk = pf.id_produk
+WHERE pf.jumlah_favorit = (
+    SELECT MAX(jumlah_favorit)
+    FROM (
+        SELECT
+            id_produk,
+            COUNT(*) AS jumlah_favorit
+        FROM produk_favorit
+        GROUP BY id_produk
+    ) x
+);

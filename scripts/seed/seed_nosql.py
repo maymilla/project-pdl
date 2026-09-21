@@ -421,6 +421,8 @@ def seed_couchdb(limit=None):
 def seed_valkey_favorit(limit=None):
     print("\n=== Valkey: produk_favorit ===")
 
+    vk.delete("produk_favorit_count")
+
     sql = add_limit(
         """
         SELECT id_pengguna, id_produk
@@ -438,6 +440,7 @@ def seed_valkey_favorit(limit=None):
             f"produk_favorit:{row['id_pengguna']}",
             row["id_produk"],
         )
+        pipe.zincrby("produk_favorit_count", 1, row["id_produk"])
 
         if i % 5000 == 0:
             pipe.execute()
@@ -631,7 +634,7 @@ def test_connections():
     if not row["ada"]:
         raise RuntimeError(
             "Schema p1_denorm belum ditemukan. "
-            "Jalankan sql/project-1-seed.sql terlebih dahulu."
+            "Restore Project-0 lalu jalankan sql/project-1-denormalized.sql terlebih dahulu."
         )
 
     print("p1_denorm: OK")

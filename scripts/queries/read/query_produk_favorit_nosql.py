@@ -1,7 +1,6 @@
 import argparse
 import os
 import time
-from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -55,49 +54,44 @@ def ambil_produk_dan_penjual(couch, id_produk):
     }
 
 
-def ambil_produk_favorit_nosql(limit):
+def ambil_produk_favorit_nosql():
     valkey = koneksi_valkey()
     couch = koneksi_couchdb()
-    jumlah_favorit = Counter()
+    maksimum = valkey.zrevrange("produk_favorit_count", 0, 0, withscores=True)
+    if not maksimum:
+        return [], 0
 
-    for key in valkey.scan_iter(match="produk_favorit:*"):
-        jumlah_favorit.update(valkey.smembers(key))
+    jumlah_maksimum = int(maksimum[0][1])
+    produk_terbanyak = [
+        (id_produk, jumlah_maksimum)
+        for id_produk in valkey.zrangebyscore(
+            "produk_favorit_count",
+            jumlah_maksimum,
+            jumlah_maksimum,
+        )
+    ]
+    produk_terbanyak.sort(key=lambda item: int(item[0]))
 
     hasil = []
-    produk_terurut = sorted(
-        jumlah_favorit.items(),
-        key=lambda item: (-item[1], int(item[0])),
-    )
-    for id_produk, total_favorit in produk_terurut:
+    for id_produk, total_favorit in produk_terbanyak:
         detail = ambil_produk_dan_penjual(couch, id_produk)
         if detail is None:
             continue
         detail["total_favorit"] = total_favorit
         hasil.append(detail)
-        if len(hasil) == limit:
-            break
 
-    return hasil, len(jumlah_favorit)
+    return hasil, valkey.zcard("produk_favorit_count")
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Agregasi produk favorit dari Valkey dan detail dari CouchDB."
     )
-    parser.add_argument(
-        "--limit",
-        type=int,
-        default=10,
-        help="Jumlah produk yang ditampilkan (default: 10).",
-    )
-    args = parser.parse_args()
-
-    if args.limit < 1:
-        parser.error("--limit harus lebih besar dari 0")
+    parser.parse_args()
 
     load_dotenv(ROOT_DIR / ".env")
     mulai = time.perf_counter()
-    rows, produk_teragregasi = ambil_produk_favorit_nosql(args.limit)
+    rows, produk_teragregasi = ambil_produk_favorit_nosql()
     waktu_ms = (time.perf_counter() - mulai) * 1000
 
     lines = [
