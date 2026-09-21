@@ -23,4 +23,4 @@ JOIN p1_denorm.pengguna AS penjual
 ORDER BY
     jumlah_favorit.total_favorit DESC,
     produk.id_produk ASC
-LIMIT %(limit)s;
+LIMIT 10;

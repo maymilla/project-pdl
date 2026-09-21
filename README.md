@@ -6,7 +6,7 @@ Project ini berisi baseline PostgreSQL denormalisasi, seed CouchDB/Valkey, dan q
 
 ```text
 sql/
-  project-1-seed.sql
+  project_0_db.dump
   project-1-denormalized.sql
   queries/
     produk_favorit_terpopuler.sql
@@ -37,13 +37,16 @@ docker compose ps
 .venv\Scripts\python.exe scripts/queries/read/query_produk_favorit.py --limit 10
 ```
 
-## Setup Project-1 mandiri
+## Setup Project-1 dari Project-0
 
-Project-1 sekarang dapat dijalankan tanpa database Project-0. SQL berikut membuat schema `p1_denorm` sekaligus memasukkan data demo:
+Restore dump Project-0 terlebih dahulu, lalu buat schema `p1_denorm` dari data tersebut:
 
 ```powershell
-psql -h 127.0.0.1 -p 5432 -U postgres -d gayang -v ON_ERROR_STOP=1 -f sql/project-1-seed.sql
+pg_restore -h 127.0.0.1 -p 5432 -U postgres --no-owner --no-privileges -d gayang sql/project_0_db.dump
+psql -h 127.0.0.1 -p 5432 -U postgres -d gayang -v ON_ERROR_STOP=1 -f sql/project-1-denormalized.sql
 ```
+
+`project-1-denormalized.sql` membaca tabel Project-0 di schema `public` dan membentuk aggregate di schema `p1_denorm`. `project-1-seed.sql` hanya digunakan untuk dataset demo mandiri, bukan untuk menjaga data Project-0.
 
 Setelah itu seed ke CouchDB dan Valkey:
 

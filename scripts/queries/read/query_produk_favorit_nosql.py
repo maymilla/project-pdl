@@ -64,7 +64,11 @@ def ambil_produk_favorit_nosql(limit):
         jumlah_favorit.update(valkey.smembers(key))
 
     hasil = []
-    for id_produk, total_favorit in jumlah_favorit.most_common():
+    produk_terurut = sorted(
+        jumlah_favorit.items(),
+        key=lambda item: (-item[1], int(item[0])),
+    )
+    for id_produk, total_favorit in produk_terurut:
         detail = ambil_produk_dan_penjual(couch, id_produk)
         if detail is None:
             continue
