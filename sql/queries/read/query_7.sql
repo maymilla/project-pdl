@@ -1,3 +1,4 @@
+-- Produk yang paling sering dimasukkan ke daftar favorit dan penjualnya
 
 SELECT
     pr.nama_produk,

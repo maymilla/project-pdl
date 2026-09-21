@@ -1,0 +1,13 @@
+=== Query 8: Metode Pembayaran Terpopuler ===
+Waktu jalan  : 2026-09-21T20:36:29.602050
+CouchDB      : http://127.0.0.1:5984  DB: gayang
+Valkey       : 127.0.0.1:6379  DB: 0
+
+======================================================================
+HASIL QUERY: METODE PEMBAYARAN PALING SERING DIGUNAKAN
+======================================================================
+waktu query  : 7439.198 ms
+pesanan dibaca dari CouchDB : 50000
+jumlah hasil : 1
+
+1. Kartu Kredit - 2550 transaksi berhasil - total nominal: 1286390000.0
