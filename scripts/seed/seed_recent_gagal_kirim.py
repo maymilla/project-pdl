@@ -3,7 +3,7 @@ seed_recent_gagal_kirim.py
 
 Menambahkan beberapa dokumen pesanan BARU langsung ke CouchDB + Valkey,
 dengan tanggal_pesanan dalam 3 hari terakhir dan status_pengiriman =
-"gagal_kirim", supaya query 5 & 6 (di dml_5_8.py) punya target nyata
+"gagal_kirim", supaya query 5 & 6 (di scripts/queries/dml_5_8.py) punya target nyata
 untuk diuji.
 
 Ini TIDAK menyentuh PostgreSQL -- dokumen dibuat langsung di CouchDB
@@ -12,7 +12,7 @@ dan status-nya langsung di-set di Valkey, meniru hasil seed_nosql.py.
 Cara pakai:
     python seed_recent_gagal_kirim.py
 
-Jalankan SEBELUM dml_5_8.py.
+Jalankan SEBELUM scripts/queries/dml_5_8.py.
 """
 
 import os
@@ -134,7 +134,7 @@ def main():
     dibuat = buat_pesanan_gagal_kirim(n=5)
 
     print(f"\nTotal dokumen baru dibuat: {len(dibuat)}")
-    print("Sekarang jalankan dml_5_8.py -- query 5 seharusnya menemukan kandidat ini.")
+    print("Sekarang jalankan scripts/queries/dml_5_8.py -- query 5 seharusnya menemukan kandidat ini.")
 
 
 if __name__ == "__main__":

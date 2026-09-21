@@ -68,7 +68,7 @@ ALTER TABLE p1_denorm.pengguna
 CREATE TABLE p1_denorm.produk AS
 SELECT
     p.id_produk,
-    p.id_pengguna AS id_penjual,
+    p.id_penjual,
     p.nama_produk,
     p.deskripsi,
     p.ukuran,
@@ -258,7 +258,7 @@ SELECT
         jsonb_agg(
             jsonb_build_object(
                 'id_pesan',     pc.id_pesan,
-                'id_pengirim',  pc.id_pengguna,
+                'id_pengirim',  pc.id_pengirim,
                 'pesan',        pc.pesan,
                 'waktu_kirim',  pc.waktu_kirim,
                 'status',       pc.status

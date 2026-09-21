@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+
+# Runtime outputs
+results/*.txt
+!results/.gitkeep
+
+# Local tooling and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

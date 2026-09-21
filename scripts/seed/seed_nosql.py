@@ -606,7 +606,7 @@ def verify(limit=None):
 def test_connections():
     print("=== Test koneksi ===")
 
-    row = fetch_all("SELECT COUNT(*) AS jumlah FROM pengguna")[0]
+    row = fetch_all("SELECT COUNT(*) AS jumlah FROM p1_denorm.pengguna")[0]
     print("PostgreSQL pengguna:", row["jumlah"])
 
     r = couch.get(f"{COUCH_URL}/_session")
@@ -631,7 +631,7 @@ def test_connections():
     if not row["ada"]:
         raise RuntimeError(
             "Schema p1_denorm belum ditemukan. "
-            "Jalankan project-1-denormalized.sql terlebih dahulu."
+            "Jalankan sql/project-1-seed.sql terlebih dahulu."
         )
 
     print("p1_denorm: OK")

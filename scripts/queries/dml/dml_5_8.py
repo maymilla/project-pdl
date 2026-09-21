@@ -2,6 +2,7 @@ import json
 import os
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
@@ -28,7 +29,7 @@ vk = Valkey(
     decode_responses=True,
 )
 
-OUTPUT_FILE = "dml_5_8_results.txt"
+OUTPUT_FILE = Path(__file__).resolve().parents[2] / "results" / "dml_5_8_results.txt"
 _log_lines = []
 
 
@@ -38,7 +39,7 @@ def log(text=""):
 
 
 def save_log():
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+    with OUTPUT_FILE.open("w", encoding="utf-8") as f:
         f.write("\n".join(_log_lines))
     print(f"\n>>> Hasil lengkap tersimpan di: {OUTPUT_FILE}")
 
