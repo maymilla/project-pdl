@@ -1,25 +1,10 @@
--- Project-1 IF4040 - Denormalized PostgreSQL baseline
--- Source: Project-0 normalized schema
--- Purpose:
---   1) Keep Project-0 tables unchanged as source-of-truth.
---   2) Create a separate denormalized schema for fairer SQL-vs-NoSQL comparison.
---   3) Prepare data that is easy to migrate to CouchDB and Valkey.
---
--- IMPORTANT:
---   - This script DOES NOT create CouchDB design docs/indexes.
---   - This script DOES NOT create secondary PostgreSQL performance indexes.
---   - Primary keys are added only to preserve row identity/integrity.
---   - Run this AFTER project-0.sql + seed.sql have populated PostgreSQL.
-
 BEGIN;
 
+# create schema
 DROP SCHEMA IF EXISTS p1_denorm CASCADE;
 CREATE SCHEMA p1_denorm;
 
--- ============================================================
--- 1. PENGGUNA + ALAMAT[]
--- One PostgreSQL row per user, addresses stored as JSONB array.
--- ============================================================
+# pengguna + alamat[]
 CREATE TABLE p1_denorm.pengguna AS
 SELECT
     u.id_pengguna,
@@ -59,12 +44,7 @@ ALTER TABLE p1_denorm.pengguna
     ADD PRIMARY KEY (id_pengguna);
 
 
--- ============================================================
--- 2. PRODUK + KATEGORI{}
--- Project-0 seed creates one category row for each product.
--- status_produk is retained for the SQL baseline.
--- CouchDB migration may omit it because status is stored in Valkey.
--- ============================================================
+# produk + kategori{}
 CREATE TABLE p1_denorm.produk AS
 SELECT
     p.id_produk,
@@ -93,10 +73,7 @@ ALTER TABLE p1_denorm.produk
     ADD PRIMARY KEY (id_produk);
 
 
--- ============================================================
--- 3. ULASAN
--- Kept as its own aggregate/document, matching the logical model.
--- ============================================================
+# ulasan
 CREATE TABLE p1_denorm.ulasan AS
 SELECT
     u.id_ulasan,
@@ -111,21 +88,7 @@ ALTER TABLE p1_denorm.ulasan
     ADD PRIMARY KEY (id_ulasan);
 
 
--- ============================================================
--- 4. PESANAN AGGREGATE
---
--- One PostgreSQL row per order.
--- Embedded structures:
---   pembayaran      : JSONB object (logical 1:1)
---   pengiriman      : JSONB array  (supports resend / multiple shipments)
---   detail_pesanan  : JSONB array
---       penyewaan   : optional embedded object
---           pengembalian : optional embedded object
---
--- Statuses remain inside this SQL baseline so PostgreSQL can answer
--- business queries independently. During CouchDB migration, status fields
--- can be removed because they are seeded separately to Valkey.
--- ============================================================
+# pesanan + pembayaran{} + pengiriman{} + (detail_pesanan[] + (penyewaan{} + pengembalian{}))
 CREATE TABLE p1_denorm.pesanan AS
 SELECT
     ps.id_pesanan,
@@ -244,11 +207,7 @@ ALTER TABLE p1_denorm.pesanan
     ADD PRIMARY KEY (id_pesanan);
 
 
--- ============================================================
--- 5. RUANG_CHAT + PESAN_CHAT[]
--- Status pesan is retained in PostgreSQL baseline.
--- During CouchDB migration it can be omitted and placed in Valkey.
--- ============================================================
+# ruang chat + pesan_chat[]
 CREATE TABLE p1_denorm.ruang_chat AS
 SELECT
     rc.id_ruang_chat,
@@ -279,11 +238,7 @@ ALTER TABLE p1_denorm.ruang_chat
     ADD PRIMARY KEY (id_ruang_chat);
 
 
--- ============================================================
--- 6. FAVORIT PER USER
--- Mirrors the access pattern later represented as a Valkey SET.
--- PostgreSQL uses BIGINT[] for the denormalized baseline.
--- ============================================================
+# produk_favorit_user
 CREATE TABLE p1_denorm.produk_favorit_user AS
 SELECT
     u.id_pengguna,
@@ -301,10 +256,7 @@ ALTER TABLE p1_denorm.produk_favorit_user
     ADD PRIMARY KEY (id_pengguna);
 
 
--- ============================================================
--- 7. ROOM MEMBERSHIP PER USER
--- Mirrors ruang_chat:{id_pengguna} -> SET<id_ruang_chat> in Valkey.
--- ============================================================
+# ruang_chat_user
 CREATE TABLE p1_denorm.ruang_chat_user AS
 WITH membership AS (
     SELECT id_penjual AS id_pengguna, id_ruang_chat
@@ -330,11 +282,6 @@ GROUP BY u.id_pengguna;
 ALTER TABLE p1_denorm.ruang_chat_user
     ADD PRIMARY KEY (id_pengguna);
 
-
--- ============================================================
--- 8. EXPORT VIEWS FOR VALKEY SEEDING
--- These are migration helpers only, not Valkey indexes.
--- ============================================================
 
 CREATE VIEW p1_denorm.valkey_status_export AS
 SELECT
@@ -403,40 +350,3 @@ FROM ruang_chat;
 
 
 COMMIT;
-
-
--- ============================================================
--- VERIFICATION QUERIES (run manually after the script succeeds)
--- ============================================================
-
--- Expected source/denorm root counts should match:
--- SELECT
---     (SELECT COUNT(*) FROM pengguna)           AS src_pengguna,
---     (SELECT COUNT(*) FROM p1_denorm.pengguna) AS denorm_pengguna;
---
--- SELECT
---     (SELECT COUNT(*) FROM produk)           AS src_produk,
---     (SELECT COUNT(*) FROM p1_denorm.produk) AS denorm_produk;
---
--- SELECT
---     (SELECT COUNT(*) FROM pesanan)           AS src_pesanan,
---     (SELECT COUNT(*) FROM p1_denorm.pesanan) AS denorm_pesanan;
---
--- SELECT
---     (SELECT COUNT(*) FROM ulasan)           AS src_ulasan,
---     (SELECT COUNT(*) FROM p1_denorm.ulasan) AS denorm_ulasan;
---
--- SELECT
---     (SELECT COUNT(*) FROM ruang_chat)           AS src_ruang_chat,
---     (SELECT COUNT(*) FROM p1_denorm.ruang_chat) AS denorm_ruang_chat;
---
--- Inspect sample aggregates:
--- SELECT * FROM p1_denorm.pengguna ORDER BY id_pengguna LIMIT 3;
--- SELECT * FROM p1_denorm.produk ORDER BY id_produk LIMIT 3;
--- SELECT * FROM p1_denorm.pesanan ORDER BY id_pesanan LIMIT 3;
--- SELECT * FROM p1_denorm.ruang_chat ORDER BY id_ruang_chat LIMIT 3;
---
--- Inspect migration helper views:
--- SELECT * FROM p1_denorm.valkey_status_export LIMIT 20;
--- SELECT * FROM p1_denorm.valkey_favorit_export LIMIT 20;
--- SELECT * FROM p1_denorm.valkey_ruang_chat_export LIMIT 20;
