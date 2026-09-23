@@ -1,0 +1,19 @@
+=== RIWAYAT TRANSAKSI PENGGUNA ===
+Waktu Jalan    : 2026-09-24T00:07:17.982056
+Waktu Eksekusi : 133.60 ms
+Total Record   : 10
+Database : Valkey & CouchDB
+
+===============================================================================================================================================================================
+NAMA       | ID_PESANAN    | TANGGAL_PESANAN                  | NAMA_PRODUK          | JENIS_TRANSAKSI | HARGA    | STATUS_PESANAN      | STATUS_PEMBAYARAN | STATUS_PENGIRIMAN
+-----------+---------------+----------------------------------+----------------------+-----------------+----------+---------------------+-------------------+------------------
+Pengguna 1 | pesanan:4902  | 2026-09-07T15:21:14.926881+07:00 | Produk Fashion 3797  | beli            | 10000.0  | dibatalkan          | berhasil          | -                
+Pengguna 1 | pesanan:4902  | 2026-09-07T15:21:14.926881+07:00 | Produk Fashion 2853  | beli            | 490000.0 | dibatalkan          | berhasil          | -                
+Pengguna 1 | pesanan:43730 | 2026-08-16T15:53:02.906893+07:00 | Produk Fashion 19360 | sewa            | 300000.0 | menunggu_pembayaran | refund            | -                
+Pengguna 1 | pesanan:43730 | 2026-08-16T15:53:02.906893+07:00 | Produk Fashion 10966 | beli            | 100000.0 | menunggu_pembayaran | refund            | -                
+Pengguna 1 | pesanan:43557 | 2026-08-15T07:21:58.100994+07:00 | Produk Fashion 12698 | beli            | 360000.0 | diproses            | refund            | -                
+Pengguna 1 | pesanan:43557 | 2026-08-15T07:21:58.100994+07:00 | Produk Fashion 4443  | beli            | 230000.0 | diproses            | refund            | -                
+Pengguna 1 | pesanan:13491 | 2026-06-16T10:42:19.995761+07:00 | Produk Fashion 3067  | beli            | 160000.0 | dibatalkan          | berhasil          | -                
+Pengguna 1 | pesanan:13491 | 2026-06-16T10:42:19.995761+07:00 | Produk Fashion 17352 | beli            | 210000.0 | dibatalkan          | berhasil          | -                
+Pengguna 1 | pesanan:36855 | 2026-05-18T21:27:36.931819+07:00 | Produk Fashion 1814  | beli            | 310000.0 | diproses            | berhasil          | -                
+Pengguna 1 | pesanan:36855 | 2026-05-18T21:27:36.931819+07:00 | Produk Fashion 177   | sewa            | 70000.0  | diproses            | berhasil          | -                
