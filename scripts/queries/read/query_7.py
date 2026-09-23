@@ -56,7 +56,7 @@ def get_top_produk_favorit_detail():
             r_p = session.get(f"{COUCHDB_URL}/{id_p}").json()
 
         nama_produk = r_p.get("nama_produk", "-")
-        id_penjual = r_p.get("id_penjual")
+        id_penjual = r_p.get("id_pengguna")
 
         nama_penjual = "-"
         if id_penjual:

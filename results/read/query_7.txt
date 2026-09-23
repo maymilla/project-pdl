@@ -1,10 +1,10 @@
 === LAPORAN PRODUK FAVORIT TERBANYAK ===
-Waktu Jalan    : 2026-09-24T00:30:45.278635
-Waktu Eksekusi : 146.53 ms
+Waktu Jalan    : 2026-09-24T00:35:00.168422
+Waktu Eksekusi : 248.97 ms
 Total Record   : 1
 Database : Valkey & CouchDB
 
-===================================================
-NAMA_PRODUK         | NAMA_PENJUAL | JUMLAH_FAVORIT
---------------------+--------------+---------------
-Produk Fashion 9818 | -            | 10            
+====================================================
+NAMA_PRODUK         | NAMA_PENJUAL  | JUMLAH_FAVORIT
+--------------------+---------------+---------------
+Produk Fashion 9818 | Pengguna 1533 | 10            
