@@ -1,126 +1,53 @@
-import os
+import requests
 import time
-from collections import defaultdict
-from datetime import datetime
+import sys
 from pathlib import Path
 
-import requests
-from dotenv import load_dotenv
-from valkey import Valkey
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 
+from utils.output import cetak_dan_simpan
 
-ROOT_DIR = Path(__file__).resolve().parents[3]
-OUTPUT_FILE = ROOT_DIR / "results" / "read" / "query_8.txt"
+COUCHDB_URL = "http://localhost:5984/gayang" 
+AUTH = ("admin_gayang", "gayang123") 
 
+def get_metode_pembayaran_teratas():
+    url = f"{COUCHDB_URL}/_design/views/_view/stats_by_metode?group=true"
+    response = requests.get(url, auth=AUTH).json()
+    rows = response.get("rows", [])
 
-def koneksi_valkey():
-    return Valkey(
-        host=os.getenv("VALKEY_HOST", "127.0.0.1"),
-        port=int(os.getenv("VALKEY_PORT", "6379")),
-        db=int(os.getenv("VALKEY_DB", "0")),
-        decode_responses=True,
-    )
+    if not rows:
+        return []
 
+    max_transaksi = max(row["value"][0] for row in rows)
 
-def koneksi_couchdb():
-    session = requests.Session()
-    session.auth = (os.getenv("COUCH_USER"), os.getenv("COUCH_PASSWORD"))
-    return session
+    hasil = []
+    for row in rows:
+        count = row["value"][0]
+        total_nominal = row["value"][1]
+        
+        if count == max_transaksi:
+            hasil.append({
+                "metode_pembayaran": row["key"],
+                "jumlah_transaksi_berhasil": count,
+                "total_nominal": total_nominal
+            })
 
-
-def ambil_pesanan(couch):
-    base_url = os.getenv("COUCH_URL", "http://127.0.0.1:5984").rstrip("/")
-    database = os.getenv("COUCH_DB", "gayang")
-    response = couch.post(
-        f"{base_url}/{database}/_find",
-        json={
-            "selector": {"type": "pesanan"},
-            "fields": ["pembayaran"],
-            "limit": 100000,
-        },
-    )
-    response.raise_for_status()
-    return response.json().get("docs", [])
-
-
-def metode_pembayaran_terpopuler(couch, valkey):
-    statistik = defaultdict(lambda: {"jumlah_transaksi": 0, "total_nominal": 0})
-    pesanan = ambil_pesanan(couch)
-    pembayaran_valid = []
-
-    for pesanan_row in pesanan:
-        pembayaran = pesanan_row.get("pembayaran")
-        if isinstance(pembayaran, dict) and pembayaran.get("id_pembayaran") is not None:
-            pembayaran_valid.append(pembayaran)
-
-    pipeline = valkey.pipeline(transaction=False)
-    for pembayaran in pembayaran_valid:
-        pipeline.get(f"status:pembayaran:{pembayaran['id_pembayaran']}")
-    status_pembayaran = pipeline.execute()
-
-    for pembayaran, status in zip(pembayaran_valid, status_pembayaran):
-        if status != "berhasil":
-            continue
-        metode = pembayaran.get("metode_pembayaran", "(tidak diketahui)")
-        statistik[metode]["jumlah_transaksi"] += 1
-        statistik[metode]["total_nominal"] += pembayaran.get("nominal") or 0
-
-    jumlah_maksimum = max(
-        (data["jumlah_transaksi"] for data in statistik.values()),
-        default=0,
-    )
-    hasil = [
-        {
-            "metode_pembayaran": metode,
-            **data,
-        }
-        for metode, data in statistik.items()
-        if data["jumlah_transaksi"] == jumlah_maksimum
-    ]
-    hasil.sort(key=lambda row: row["metode_pembayaran"])
-    return hasil, len(pesanan)
-
-
-def main():
-    load_dotenv(ROOT_DIR / ".env")
-    mulai = time.perf_counter()
-    hasil, jumlah_pesanan = metode_pembayaran_terpopuler(
-        koneksi_couchdb(),
-        koneksi_valkey(),
-    )
-    waktu_ms = (time.perf_counter() - mulai) * 1000
-
-    lines = [
-        "=== Query 8: Metode Pembayaran Terpopuler ===",
-        f"Waktu jalan  : {datetime.now().isoformat()}",
-        f"CouchDB      : {os.getenv('COUCH_URL', 'http://127.0.0.1:5984')}  DB: {os.getenv('COUCH_DB', 'gayang')}",
-        f"Valkey       : {os.getenv('VALKEY_HOST', '127.0.0.1')}:{os.getenv('VALKEY_PORT', '6379')}  DB: {os.getenv('VALKEY_DB', '0')}",
-        "",
-        "=" * 70,
-        "HASIL QUERY: METODE PEMBAYARAN PALING SERING DIGUNAKAN",
-        "=" * 70,
-        f"waktu query  : {waktu_ms:.3f} ms",
-        f"pesanan dibaca dari CouchDB : {jumlah_pesanan}",
-        f"jumlah hasil : {len(hasil)}",
-        "",
-    ]
-
-    if hasil:
-        for nomor, row in enumerate(hasil, start=1):
-            lines.append(
-                f"{nomor}. {row['metode_pembayaran']} - "
-                f"{row['jumlah_transaksi']} transaksi berhasil - "
-                f"total nominal: {row['total_nominal']}"
-            )
-    else:
-        lines.append("Tidak ada transaksi pembayaran berhasil.")
-
-    output = "\n".join(lines)
-    print(output)
-    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_FILE.write_text(output + "\n", encoding="utf-8")
-    print(f"\n>>> Hasil lengkap tersimpan di: {OUTPUT_FILE}")
-
+    return hasil
 
 if __name__ == "__main__":
-    main()
+    start_time = time.perf_counter()
+
+    data_hasil = get_metode_pembayaran_teratas()
+
+    end_time = time.perf_counter()
+    duration_ms = (end_time - start_time) * 1000
+
+    cetak_dan_simpan(
+        judul="=== LAPORAN METODE PEMBAYARAN ===",
+        data=data_hasil,
+        output_file="results/read/query_8.txt",
+        exec_time_ms=duration_ms,
+        meta_extra=["Database : Valkey & CouchDB"],
+    )
