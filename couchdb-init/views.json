@@ -25,6 +25,10 @@
     "transaksi_per_user": {
       "map": "function(doc) { if (doc.type === 'pesanan') { doc.detail_pesanan.forEach(function(d) { emit([doc.id_pembeli, d.jenis_transaksi], 1); }); } }",
       "reduce": "_count"
+    },
+    "stats_by_metode": {
+      "map": "function (doc) {if (doc.type === 'pembayaran' && doc.status_pembayaran === 'berhasil') {emit(doc.metode_pembayaran, [1, doc.nominal]);}}",
+      "reduce": "function (keys, values, rereduce) {var totalCount = 0;var totalNominal = 0; for (var i = 0; i < values.length; i++) {totalCount += values[i][0]; totalNominal += values[i][1];}return [totalCount, totalNominal];}"
     }
   }
 }

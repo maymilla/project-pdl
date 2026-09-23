@@ -1,134 +1,104 @@
-import argparse
-import os
-import time
 from datetime import datetime
+import os
 from pathlib import Path
-
+import time
 import requests
-from dotenv import load_dotenv
 from valkey import Valkey
 
+import sys
+from pathlib import Path
 
-ROOT_DIR = Path(__file__).resolve().parents[3]
-OUTPUT_FILE = ROOT_DIR / "results"/ "read" / "query_7.txt"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 
-
-def koneksi_valkey():
-    return Valkey(
-        host=os.getenv("VALKEY_HOST", "127.0.0.1"),
-        port=int(os.getenv("VALKEY_PORT", "6379")),
-        db=int(os.getenv("VALKEY_DB", "0")),
-        decode_responses=True,
-    )
+from utils.output import cetak_dan_simpan
 
 
-def koneksi_couchdb():
-    session = requests.Session()
-    session.auth = (os.getenv("COUCH_USER"), os.getenv("COUCH_PASSWORD"))
-    return session
+VALKEY_HOST = os.getenv("VALKEY_HOST", "127.0.0.1")
+VALKEY_PORT = int(os.getenv("VALKEY_PORT", "6379"))
+VALKEY_DB = int(os.getenv("VALKEY_DB", "0"))
+
+COUCHDB_URL = "http://localhost:5984/gayang"
+AUTH = ("admin_gayang", "gayang123")
+
+vk = Valkey(
+    host=VALKEY_HOST,
+    port=VALKEY_PORT,
+    db=VALKEY_DB,
+    decode_responses=True,
+)
 
 
-def ambil_produk_dan_penjual(couch, id_produk):
-    base_url = os.getenv("COUCH_URL", "http://127.0.0.1:5984").rstrip("/")
-    database = os.getenv("COUCH_DB", "gayang")
-
-    produk_response = couch.get(f"{base_url}/{database}/produk:{id_produk}")
-    if produk_response.status_code == 404:
-        return None
-    produk_response.raise_for_status()
-    produk = produk_response.json()
-
-    id_penjual = produk.get("id_penjual")
-    penjual_response = couch.get(f"{base_url}/{database}/pengguna:{id_penjual}")
-    if penjual_response.status_code == 404:
-        nama_penjual = "(data penjual tidak ditemukan)"
-    else:
-        penjual_response.raise_for_status()
-        nama_penjual = penjual_response.json().get("nama", "(tanpa nama)")
-
-    return {
-        "id_produk": id_produk,
-        "nama_produk": produk.get("nama_produk", "(tanpa nama)"),
-        "id_penjual": id_penjual,
-        "nama_penjual": nama_penjual,
-    }
-
-
-def ambil_produk_favorit_nosql():
-    valkey = koneksi_valkey()
-    couch = koneksi_couchdb()
-    maksimum = valkey.zrevrange("produk_favorit_count", 0, 0, withscores=True)
-    if not maksimum:
-        return [], 0
-
-    jumlah_maksimum = int(maksimum[0][1])
-    produk_terbanyak = [
-        (id_produk, jumlah_maksimum)
-        for id_produk in valkey.zrangebyscore(
-            "produk_favorit_count",
-            jumlah_maksimum,
-            jumlah_maksimum,
-        )
-    ]
-    produk_terbanyak.sort(key=lambda item: int(item[0]))
-
-    hasil = []
-    for id_produk, total_favorit in produk_terbanyak:
-        detail = ambil_produk_dan_penjual(couch, id_produk)
-        if detail is None:
-            continue
-        detail["total_favorit"] = total_favorit
-        hasil.append(detail)
-
-    return hasil, valkey.zcard("produk_favorit_count")
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Agregasi produk favorit dari Valkey dan detail dari CouchDB."
-    )
-    parser.parse_args()
-
-    load_dotenv(ROOT_DIR / ".env")
-    mulai = time.perf_counter()
-    rows, produk_teragregasi = ambil_produk_favorit_nosql()
-    waktu_ms = (time.perf_counter() - mulai) * 1000
-
-    lines = [
-        "=== Query Produk Paling Sering Difavoritkan (NoSQL) ===",
-        f"Waktu jalan  : {datetime.now().isoformat()}",
-        f"CouchDB      : {os.getenv('COUCH_URL', 'http://127.0.0.1:5984')}  DB: {os.getenv('COUCH_DB', 'gayang')}",
-        f"Valkey       : {os.getenv('VALKEY_HOST', '127.0.0.1')}:{os.getenv('VALKEY_PORT', '6379')}  DB: {os.getenv('VALKEY_DB', '0')}",
-        "",
-        "=" * 70,
-        "HASIL QUERY: PRODUK PALING SERING DIFAVORITKAN",
-        "=" * 70,
-        f"waktu query  : {waktu_ms:.3f} ms",
-        f"produk dihitung dari Valkey : {produk_teragregasi}",
-        f"jumlah hasil : {len(rows)}",
-        "",
-    ]
-
-    if rows:
-        for nomor, row in enumerate(rows, start=1):
-            lines.append(
-                f"{nomor}. {row['nama_produk']} "
-                f"(id_produk={row['id_produk']}) - "
-                f"{row['total_favorit']} favorit - "
-                f"penjual: {row['nama_penjual']} "
-                f"(id_penjual={row['id_penjual']})"
-            )
-    else:
-        lines.append(
-            "Tidak ada data favorit. Jalankan seed_nosql.py terlebih dahulu "
-            "atau isi key produk_favorit:{id_pengguna} di Valkey."
-        )
-
+def simpan_dan_print(judul, meta_lines, hasil_lines, output_file: Path):
+    lines = [judul, f"Waktu jalan   : {datetime.now().isoformat()}"]
+    lines += meta_lines
+    lines += ["", "=" * 75]
+    lines += hasil_lines
     output = "\n".join(lines)
     print(output)
-    OUTPUT_FILE.write_text(output + "\n", encoding="utf-8")
-    print(f"\n>>> Hasil lengkap tersimpan di: {OUTPUT_FILE}")
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    output_file.write_text(output + "\n", encoding="utf-8")
+    print(f"\n>>> Hasil lengkap tersimpan di: {output_file}")
+    return output
+
+
+def get_top_produk_favorit_detail():
+    keys = vk.keys("produk_favorit_user:*")
+    favorit_counts = {}
+    for key in keys:
+        id_produk = key.replace("produk_favorit_user:", "")
+        count = vk.scard(key)
+        favorit_counts[id_produk] = count
+
+    if not favorit_counts:
+        return []
+
+    max_favorit = max(favorit_counts.values())
+    top_produk_ids = [
+        id_p for id_p, count in favorit_counts.items() if count == max_favorit
+    ]
+
+    hasil = []
+    for id_p in top_produk_ids:
+        # Ambil dokumen produk dari CouchDB
+        res_p = requests.get(f"{COUCHDB_URL}/produk:{id_p}", auth=AUTH).json()
+        if "error" in res_p:
+            res_p = requests.get(f"{COUCHDB_URL}/{id_p}", auth=AUTH).json()
+
+        nama_produk = res_p.get("nama_produk", "-")
+        id_penjual = res_p.get("id_penjual")
+
+        # Ambil nama penjual
+        nama_penjual = "-"
+        if id_penjual:
+            clean_penjual_id = str(id_penjual).replace("pengguna:", "")
+            res_pe = requests.get(
+                f"{COUCHDB_URL}/pengguna:{clean_penjual_id}", auth=AUTH
+            ).json()
+            nama_penjual = res_pe.get("nama", "-")
+
+        hasil.append({
+            "nama_produk": nama_produk,
+            "nama_penjual": nama_penjual,
+            "jumlah_favorit": max_favorit,
+        })
+
+    return hasil
 
 
 if __name__ == "__main__":
-    main()
+    start_time = time.perf_counter()
+
+    data_hasil = get_top_produk_favorit_detail()
+
+    end_time = time.perf_counter()
+    duration_ms = (end_time - start_time) * 1000
+
+    cetak_dan_simpan(
+        judul="=== LAPORAN PRODUK FAVORIT TERBANYAK ===",
+        data=data_hasil,
+        output_file="results/read/query_7.txt",
+        exec_time_ms=duration_ms,
+        meta_extra=["Database : Valkey & CouchDB"],
+    )
