@@ -40,6 +40,30 @@ pg = psycopg.connect(
 couch = requests.Session()
 couch.auth = (COUCH_USER, COUCH_PASSWORD)
 
+def reset_couchdb():
+    print("\n=== Reset CouchDB ===")
+
+    # hapus database lama
+    r = couch.delete(
+        f"{COUCH_URL}/{COUCH_DB}"
+    )
+
+    if r.status_code in [200, 202]:
+        print("Database lama dihapus")
+    elif r.status_code == 404:
+        print("Database belum ada")
+    else:
+        r.raise_for_status()
+
+    # buat database baru
+    r = couch.put(
+        f"{COUCH_URL}/{COUCH_DB}"
+    )
+
+    r.raise_for_status()
+
+    print(f"Database {COUCH_DB} dibuat ulang")
+
 vk = Valkey(
     host=VALKEY_HOST,
     port=VALKEY_PORT,
@@ -66,13 +90,21 @@ def fetch_all(sql, params=None):
         return cur.fetchall()
 
 
-def couch_bulk_insert(docs):
-    if docs:
+def couch_bulk_insert(docs, batch_size=100):
+    if not docs:
+        return
+
+    for i in range(0, len(docs), batch_size):
+        batch = docs[i:i+batch_size]
+
         r = couch.post(
             f"{COUCH_URL}/{COUCH_DB}/_bulk_docs",
-            json={"docs": json_safe(docs)}
+            json={"docs": json_safe(batch)}
         )
+
         r.raise_for_status()
+
+    print(f"Inserted {len(docs)} documents")
 
 # couchdb
 
@@ -118,7 +150,7 @@ def seed_produk():
             ) AS kategori
         FROM produk p
         JOIN kategori k
-        ON p.id_kategori=k.id_kategori
+        ON p.id_produk=k.id_produk
     """)
 
     docs=[
@@ -203,7 +235,7 @@ def seed_penyewaan():
             ) AS pengembalian
         FROM penyewaan s
         LEFT JOIN pengembalian g
-        ON s.id_pengembalian=g.id_pengembalian
+        ON s.id_penyewaan=g.id_penyewaan
     """)
 
     docs=[
@@ -255,33 +287,76 @@ def seed_pengembalian():
 
 
 def seed_ruang_chat():
-    rows=fetch_all("""
+    rows = fetch_all("""
         SELECT
-            rc.*,
+            rc.id_ruang_chat,
+            rc.id_penjual,
+            rc.id_pembeli,
+
             (
-                SELECT json_agg(
-                    json_build_object(
-                        'id_pesan',pc.id_pesan,
-                        'id_pengirim',pc.id_pengirim,
-                        'pesan',pc.pesan,
-                        'waktu_kirim',pc.waktu_kirim,
-                        'status',pc.status
-                    )
+                SELECT json_build_object(
+                    'id_pesan', pc.id_pesan,
+                    'id_pengguna', pc.id_pengguna,
+                    'pesan', pc.pesan,
+                    'waktu_kirim', pc.waktu_kirim,
+                    'status', pc.status
                 )
                 FROM pesan_chat pc
-                WHERE pc.id_ruang_chat=rc.id_ruang_chat
-            ) AS pesan_chat
+                WHERE pc.id_ruang_chat = rc.id_ruang_chat
+                ORDER BY pc.waktu_kirim DESC
+                LIMIT 1
+            ) AS pesan_terakhir
+
         FROM ruang_chat rc
     """)
 
-    docs=[
+
+    docs = [
         {
-            "_id":f"ruang_chat:{r['id_ruang_chat']}",
-            "type":"ruang_chat",
-            **r
+            "_id": f"ruang_chat:{r['id_ruang_chat']}",
+            "type": "ruang_chat",
+
+            "id_ruang_chat": r["id_ruang_chat"],
+            "id_penjual": r["id_penjual"],
+            "id_pembeli": r["id_pembeli"],
+
+            "pesan_terakhir": r["pesan_terakhir"]
         }
         for r in rows
     ]
+
+
+    couch_bulk_insert(docs)
+
+def seed_pesan_chat():
+
+    rows = fetch_all("""
+        SELECT
+            id_pesan,
+            id_ruang_chat,
+            id_pengguna,
+            pesan,
+            waktu_kirim,
+            status
+        FROM pesan_chat
+    """)
+
+
+    docs = [
+        {
+            "_id": f"pesan_chat:{r['id_pesan']}",
+            "type": "pesan_chat",
+
+            "id_pesan": r["id_pesan"],
+            "id_ruang_chat": r["id_ruang_chat"],
+            "id_pengguna": r["id_pengguna"],
+            "pesan": r["pesan"],
+            "waktu_kirim": r["waktu_kirim"],
+            "status": r["status"]
+        }
+        for r in rows
+    ]
+
 
     couch_bulk_insert(docs)
 
@@ -364,7 +439,7 @@ def seed_detail_pesanan():
 
     rows = fetch_all("""
         SELECT
-            id_detail,
+            id_pesanan,
             no_urut,
             id_produk,
             jenis_transaksi,
@@ -374,10 +449,10 @@ def seed_detail_pesanan():
 
     docs = [
         {
-            "_id": f"detail_pesanan:{r['id_detail']}",
+            "_id": f"detail_pesanan:{r['id_pesanan']}:{r['no_urut']}",
             "type": "detail_pesanan",
 
-            "id_detail": r["id_detail"],
+            "id_pesanan": r["id_pesanan"],
             "no_urut": r["no_urut"],
             "id_produk": r["id_produk"],
             "jenis_transaksi": r["jenis_transaksi"],
@@ -460,17 +535,28 @@ def seed_valkey_ruang_chat():
 
     rows = fetch_all("""
         SELECT
-            id_pengguna,
-            id_ruang_chat
-        FROM ruang_chat_user
+            id_ruang_chat,
+            id_penjual,
+            id_pembeli
+        FROM ruang_chat
     """)
 
     pipe = vk.pipeline(transaction=False)
 
     for r in rows:
 
+        user1 = min(
+            r["id_penjual"],
+            r["id_pembeli"]
+        )
+
+        user2 = max(
+            r["id_penjual"],
+            r["id_pembeli"]
+        )
+
         pipe.sadd(
-            f"ruang_chat:{r['id_pengguna']}",
+            f"ruang_chat:{user1}:{user2}",
             r["id_ruang_chat"]
         )
 
@@ -496,6 +582,7 @@ def seed_all():
     seed_penyewaan()
     seed_pengembalian()
     seed_ruang_chat()
+    seed_pesan_chat()
     seed_alamat()
     seed_pembayaran()
     seed_ulasan()
