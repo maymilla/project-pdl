@@ -1,0 +1,19 @@
+=== LAPORAN PRODUK TANPA ULASAN ===
+Waktu Jalan    : 2026-09-24T00:05:39.128260
+Waktu Eksekusi : 4857.20 ms
+Total Record   : 10
+Database : Valkey & CouchDB
+
+==============================================================================================
+ID_PRODUK | NAMA_PRODUK       | KONDISI              | HARGA_JUAL | HARGA_SEWA | STATUS_PRODUK
+----------+-------------------+----------------------+------------+------------+--------------
+1         | Produk Fashion 1  | Baru                 | 560000.0   | 20000.0    | disewa       
+5         | Produk Fashion 5  | Bekas - Seperti Baru | 780000.0   | 85000.0    | disewa       
+12        | Produk Fashion 12 | Bekas - Seperti Baru | 470000.0   | 50000.0    | tersedia     
+16        | Produk Fashion 16 | Baru                 | 20000.0    | 65000.0    | tersedia     
+17        | Produk Fashion 17 | Bekas - Kondisi Baik | 790000.0   | 95000.0    | tersedia     
+18        | Produk Fashion 18 | Baru                 | 750000.0   | 75000.0    | nonaktif     
+21        | Produk Fashion 21 | Baru                 | 150000.0   | 85000.0    | terjual      
+24        | Produk Fashion 24 | Baru                 | 260000.0   | 35000.0    | nonaktif     
+25        | Produk Fashion 25 | Bekas - Kondisi Baik | 120000.0   | 100000.0   | nonaktif     
+29        | Produk Fashion 29 | Bekas - Seperti Baru | 450000.0   | 75000.0    | tersedia     
