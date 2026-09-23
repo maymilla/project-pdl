@@ -1,20 +1,3 @@
-"""
-seed_recent_gagal_kirim.py
-
-Menambahkan beberapa dokumen pesanan BARU langsung ke CouchDB + Valkey,
-dengan tanggal_pesanan dalam 3 hari terakhir dan status_pengiriman =
-"gagal_kirim", supaya query 5 & 6 (di scripts/queries/dml_5_8.py) punya target nyata
-untuk diuji.
-
-Ini TIDAK menyentuh PostgreSQL -- dokumen dibuat langsung di CouchDB
-dan status-nya langsung di-set di Valkey, meniru hasil seed_nosql.py.
-
-Cara pakai:
-    python seed_recent_gagal_kirim.py
-
-Jalankan SEBELUM scripts/queries/dml_5_8.py.
-"""
-
 import os
 import time
 from datetime import datetime, timedelta
@@ -45,21 +28,10 @@ vk = Valkey(
     decode_responses=True,
 )
 
-# ID awal untuk dokumen buatan -- dipilih besar supaya tidak
-# bentrok dengan id_pesanan/id_pengiriman/id_pembayaran hasil seeding asli.
 BASE_ID = 9_000_000
 
 
 def buat_pesanan_gagal_kirim(n, id_penjual=7317, id_pembeli=8307, id_alamat=4467):
-    """
-    Membuat n dokumen pesanan baru:
-      - tanggal_pesanan tersebar dalam 0-2 hari terakhir (masih dalam
-        jendela "maksimal 3 hari" yang diminta query 5)
-      - status_pesanan   = menunggu_pembayaran (Valkey)
-      - status_pembayaran = pending (Valkey)
-      - status_pengiriman = gagal_kirim (Valkey)  <- target utama
-      - belum ada percobaan pengiriman ke-2 (belum retry)
-    """
     dibuat = []
 
     for i in range(n):
@@ -67,7 +39,6 @@ def buat_pesanan_gagal_kirim(n, id_penjual=7317, id_pembeli=8307, id_alamat=4467
         id_pengiriman = BASE_ID + i
         id_pembayaran = BASE_ID + i
 
-        # sebar tanggal: 0, 12, 24, ... jam ke belakang dari sekarang
         jam_mundur = i * 8
         tanggal_pesanan = (datetime.utcnow() - timedelta(hours=jam_mundur)).isoformat()
 
@@ -111,13 +82,11 @@ def buat_pesanan_gagal_kirim(n, id_penjual=7317, id_pembeli=8307, id_alamat=4467
         r = couch.put(f"{COUCH_URL}/{COUCH_DB}/{doc['_id']}", json=doc)
 
         if r.status_code == 409:
-            # dokumen dengan _id ini sudah ada dari run sebelumnya -> lewati
             print(f"  {doc['_id']} sudah ada, lewati (jalankan ulang aman).")
             continue
 
         r.raise_for_status()
 
-        # set status di Valkey (meniru p1_denorm.valkey_status_export)
         vk.set(f"status:pesanan:{id_pesanan}", "menunggu_pembayaran")
         vk.set(f"status:pembayaran:{id_pembayaran}", "pending")
         vk.set(f"status:pengiriman:{id_pengiriman}", "gagal_kirim")
