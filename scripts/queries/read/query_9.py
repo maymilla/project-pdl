@@ -49,7 +49,7 @@ if __name__ == "__main__":
     cetak_dan_simpan(
         judul="=== LAPORAN TOP RATING ===",
         data=data_hasil,
-        output_file="results/read/query_8.txt",
+        output_file="results/read/query_9.txt",
         exec_time_ms=duration_ms,
         meta_extra=["Database : Valkey & CouchDB"],
     )
