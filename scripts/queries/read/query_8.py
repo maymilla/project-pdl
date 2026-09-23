@@ -12,9 +12,12 @@ from utils.output import cetak_dan_simpan
 COUCHDB_URL = "http://localhost:5984/gayang" 
 AUTH = ("admin_gayang", "gayang123") 
 
+session = requests.Session()
+session.auth = AUTH
+
 def get_metode_pembayaran_teratas():
     url = f"{COUCHDB_URL}/_design/views/_view/stats_by_metode?group=true"
-    response = requests.get(url, auth=AUTH).json()
+    response = session.get(url, auth=AUTH).json()
     rows = response.get("rows", [])
 
     if not rows:
