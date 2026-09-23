@@ -1,5 +1,15 @@
-$CouchUser = $env:COUCH_USER
-$CouchPass = $env:COUCH_PASSWORD
+$CouchUser = if ($env:COUCH_USER) {
+    $env:COUCH_USER
+} else {
+    "admin_gayang"
+}
+
+$CouchPass = if ($env:COUCH_PASSWORD) {
+    $env:COUCH_PASSWORD
+} else {
+    "gayang123"
+}
+
 $CouchHost = "http://localhost:5984"
 $Db = "gayang"
 
