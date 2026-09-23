@@ -576,6 +576,7 @@ def seed_valkey():
 
 
 def seed_all():
+    reset_couchdb()
     seed_pengguna()
     seed_produk()
     seed_pesanan()
