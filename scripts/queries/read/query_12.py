@@ -12,6 +12,10 @@ from utils.output import cetak_dan_simpan
 COUCHDB_URL = "http://localhost:5984/gayang"
 AUTH = ("admin_gayang", "gayang123")
 
+
+session = requests.Session()
+session.auth = AUTH
+
 def get_riwayat_transaksi_pengguna(id_pembeli=1):
     docs = []
     for target_id in [int(id_pembeli), str(id_pembeli), f"pengguna:{id_pembeli}"]:
@@ -21,7 +25,7 @@ def get_riwayat_transaksi_pengguna(id_pembeli=1):
                 "id_pembeli": target_id
             }
         }
-        res = requests.post(f"{COUCHDB_URL}/_find", json=payload, auth=AUTH).json()
+        res = session.post(f"{COUCHDB_URL}/_find", json=payload).json()
         docs = res.get("docs", [])
         if docs:
             break
@@ -32,7 +36,7 @@ def get_riwayat_transaksi_pengguna(id_pembeli=1):
 
     docs.sort(key=lambda x: x.get("tanggal_pesanan", ""), reverse=True)
 
-    res_user = requests.get(f"{COUCHDB_URL}/pengguna:{id_pembeli}", auth=AUTH).json()
+    res_user = session.get(f"{COUCHDB_URL}/pengguna:{id_pembeli}").json()
     nama_user = res_user.get("nama", "Unknown")
 
     hasil_akhir = []
@@ -43,11 +47,11 @@ def get_riwayat_transaksi_pengguna(id_pembeli=1):
         status_kirim = pengiriman_list[0].get("status_pengiriman") if pengiriman_list else None
 
         id_pembayaran = ps.get("id_pembayaran")
-        pb_doc = requests.get(f"{COUCHDB_URL}/pembayaran:{id_pembayaran}", auth=AUTH).json() if id_pembayaran else {}
+        pb_doc = session.get(f"{COUCHDB_URL}/pembayaran:{id_pembayaran}").json() if id_pembayaran else {}
 
         for dp in details:
             id_produk = dp.get("id_produk")
-            prod_doc = requests.get(f"{COUCHDB_URL}/produk:{id_produk}", auth=AUTH).json() if id_produk else {}
+            prod_doc = session.get(f"{COUCHDB_URL}/produk:{id_produk}").json() if id_produk else {}
 
             hasil_akhir.append({
                 "nama": nama_user,

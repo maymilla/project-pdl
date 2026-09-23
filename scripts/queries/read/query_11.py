@@ -12,9 +12,13 @@ from utils.output import cetak_dan_simpan
 COUCHDB_URL = "http://localhost:5984/gayang"
 AUTH = ("admin_gayang", "gayang123")
 
+
+session = requests.Session()
+session.auth = AUTH
+
 def get_produk_tanpa_ulasan():
     url_ulasan = f"{COUCHDB_URL}/_design/views/_view/rating_per_produk?group=true"
-    res_ulasan = requests.get(url_ulasan, auth=AUTH).json()
+    res_ulasan = session.get(url_ulasan).json()
     
     reviewed_ids = set()
     for row in res_ulasan.get("rows", []):
@@ -25,7 +29,7 @@ def get_produk_tanpa_ulasan():
                 reviewed_ids.add(int(clean_id))
 
     url_produk = f"{COUCHDB_URL}/_design/views/_view/produk_by_id?include_docs=true"
-    res_produk = requests.get(url_produk, auth=AUTH).json()
+    res_produk = session.get(url_produk).json()
     produk_rows = res_produk.get("rows", [])
 
     all_produk = []

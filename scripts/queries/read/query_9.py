@@ -12,15 +12,17 @@ from utils.output import cetak_dan_simpan
 COUCHDB_URL = "http://localhost:5984/gayang" 
 AUTH = ("admin_gayang", "gayang123")                        # ganti password
 
+session = requests.Session()
+session.auth = AUTH
 
 def get_top_rating():
     url = f"{COUCHDB_URL}/_design/views/_view/rating_per_produk"
     
-    res_global = requests.get(f"{url}?group=false", auth=AUTH).json()
+    res_global = session.get(f"{url}?group=false").json()
     stats_g = res_global["rows"][0]["value"]
     avg_global = stats_g["sum"] / stats_g["count"]
 
-    res_produk = requests.get(f"{url}?group=true", auth=AUTH).json()
+    res_produk = session.get(f"{url}?group=true").json()
     
     hasil = []
     for row in res_produk.get("rows", []):
