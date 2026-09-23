@@ -320,6 +320,19 @@ Invoke-WebRequest http://127.0.0.1:5984/ | Select-Object -ExpandProperty Content
 
 Database `gayang` akan dibuat oleh script seeding jika belum tersedia.
 
+### Tambahkan Index dan View CouchDB
+
+Setelah CouchDB berjalan, jalankan script PowerShell berikut dari root project untuk menambahkan database `gayang`, Mango index dari `couchdb-init/indexes.json`, dan view dari `couchdb-init/views.json`:
+
+```powershell
+cd couchdb-init
+./init.ps1
+```
+
+Script membaca `COUCH_USER` dan `COUCH_PASSWORD` dari file `.env` di folder induk, lalu menunggu CouchDB siap sebelum membuat index dan view.
+
+Jalankan ulang script tersebut setiap kali file index atau view di folder `couchdb-init` diubah.
+
 ## 12. Cek Valkey
 
 Gunakan Valkey CLI di dalam container:

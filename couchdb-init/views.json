@@ -1,0 +1,30 @@
+{
+  "_id": "_design/views",
+  "views": {
+    "pendapatan_per_kategori": {
+      "map": "function(doc) { if (doc.type === 'pesanan' && doc.status_pesanan === 'selesai') { doc.detail_pesanan.forEach(function(d) { var bulan = doc.tanggal_pesanan.substring(0,7); emit([d.id_produk, bulan], d.harga); }); } }",
+      "reduce": "_sum"
+    },
+    "detail_by_produk": {
+      "map": "function(doc) { if (doc.type === 'pesanan') { doc.detail_pesanan.forEach(function(d) { emit(d.id_produk, {jenis_transaksi: d.jenis_transaksi, harga: d.harga}); }); } }"
+    },
+    "penyewaan_by_user_produk": {
+      "map": "function(doc) { if (doc.type === 'pesanan') { doc.detail_pesanan.forEach(function(d) { if (d.jenis_transaksi === 'sewa') { emit([doc.id_pembeli, d.id_produk], 1); } }); } }",
+      "reduce": "_count"
+    },
+    "pengiriman_gagal": {
+      "map": "function(doc) { if (doc.type === 'pesanan' && doc.pengiriman) { doc.pengiriman.forEach(function(p) { if (p.status_pengiriman === 'gagal') { emit(p.status_pengiriman, {id_pesanan: doc.id_pesanan, tanggal_kirim: p.tanggal_kirim}); } }); } }"
+    },
+    "rating_per_produk": {
+      "map": "function(doc) { if (doc.type === 'ulasan') { emit(doc.id_produk, doc.rating); } }",
+      "reduce": "_stats"
+    },
+    "produk_by_id": {
+      "map": "function(doc) { if (doc.type === 'produk') { emit(doc._id, 1); } }"
+    },
+    "transaksi_per_user": {
+      "map": "function(doc) { if (doc.type === 'pesanan') { doc.detail_pesanan.forEach(function(d) { emit([doc.id_pembeli, d.jenis_transaksi], 1); }); } }",
+      "reduce": "_count"
+    }
+  }
+}
