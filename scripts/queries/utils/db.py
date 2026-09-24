@@ -1,8 +1,10 @@
 import os
 import time
 import requests
+from dotenv import load_dotenv
 from valkey import Valkey
 
+load_dotenv()
 
 def koneksi_couchdb():
   session = requests.Session()
@@ -56,3 +58,29 @@ def couch_post(couch, doc):
   response = couch.post(f"{_base_url()}/{_db_name()}", json=doc)
   response.raise_for_status()
   return response.json()
+
+def couch_bulk_docs(couch, docs):
+    response = couch.post(
+        f"{_base_url()}/{_db_name()}/_bulk_docs",
+        json={
+            "docs": docs
+        }
+    )
+    response.raise_for_status()
+    return response.json()
+
+def couch_bulk_get(couch, ids):
+    response = couch.post(
+        f"{_base_url()}/{_db_name()}/_all_docs?include_docs=true",
+        json={
+            "keys": ids
+        }
+    )
+    response.raise_for_status()
+    rows = response.json()["rows"]
+    
+    return [
+        r["doc"]
+        for r in rows
+        if "doc" in r
+    ]
