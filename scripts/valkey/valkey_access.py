@@ -17,6 +17,19 @@ vk = Valkey(
     decode_responses=True,
 )
 
+# UTILS
+
+def get_next_id(doctype):
+    """Generate ID berurutan pakai Valkey INCR (atomik, O(1))."""
+    return vk.incr(f"counter:{doctype}")
+
+
+def init_counter(doctype, nilai_awal):
+    """Set nilai awal counter — jalanin sekali setelah seeding awal,
+    supaya ID baru nggak numbrek ID yang udah ada di CouchDB."""
+    vk.set(f"counter:{doctype}", nilai_awal)
+    return vk.get(f"counter:{doctype}")
+
 def timed(label, fn, *args, **kwargs):
     start = time.perf_counter()
     result = fn(*args, **kwargs)
@@ -118,6 +131,11 @@ def main():
     print("=== Koneksi Valkey ===")
     print(f"Host: {VALKEY_HOST}:{VALKEY_PORT}  DB: {VALKEY_DB}")
     print(f"PING -> {vk.ping()}")
+    print("Initializing counter..")
+    init_counter("ruang_chat", 9999)
+    init_counter("pesan_chat", 100000)
+    init_counter("pengiriman", 50000)
+    init_counter("pesanan", 50000)
 
     demo_produk_favorit()
     demo_ruang_chat()

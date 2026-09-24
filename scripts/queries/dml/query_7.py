@@ -13,7 +13,7 @@ for import_root in (QUERIES_ROOT, PROJECT_ROOT):
     sys.path.append(str(import_root))
 
 from utils.output import cetak_dan_simpan
-from scripts.valkey.valkey_access import vk, get_ruang_chat_pasangan, daftarkan_ruang_chat
+from scripts.valkey.valkey_access import vk, get_next_id, get_ruang_chat_pasangan, daftarkan_ruang_chat
 
 COUCHDB_URL = "http://localhost:5984/gayang"
 AUTH = ("admin_gayang", "gayang123")
@@ -25,20 +25,6 @@ ID_PENJUAL = 25
 ID_PEMBELI = 10
 ID_PENGIRIM = 10
 TEKS_PESAN = "Halo kak, apakah produk ini masih tersedia?"
-
-
-def get_next_id(doctype):
-  url = f"{COUCHDB_URL}/_all_docs"
-  params = {"startkey": f'"{doctype}:"', "endkey": f'"{doctype}:\ufff0"'}
-  rows = session.get(url, params=params).json().get("rows", [])
-  max_id = 0
-  for row in rows:
-    try:
-      n = int(row["id"].split(":")[1])
-      max_id = max(max_id, n)
-    except (IndexError, ValueError):
-      continue
-  return max_id + 1
 
 
 def kirim_pesan():

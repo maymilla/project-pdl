@@ -2,41 +2,56 @@
   {"index": {
     "fields": ["type","status_produk"]}, 
     "name": "idx_produk_status", 
-    "ddoc": "idx_produk_status"},
+    "ddoc": "idx_produk_status"
+  },
   {"index": {
     "fields": ["type","id_penjual"]}, 
     "name": "idx_produk_penjual", 
-    "ddoc": "idx_produk_penjual"},
+    "ddoc": "idx_produk_penjual"
+  },
   {"index": {
     "fields": ["type","kategori.id_kategori"]},
     "name": "idx_produk_kategori",
-    "ddoc": "idx_produk_kategori"},
+    "ddoc": "idx_produk_kategori"
+  },
   {"index": {
     "fields": ["type","id_pembeli"]},
     "name": "idx_pesanan_pembeli",
-    "ddoc": "idx_pesanan_pembeli"},
+    "ddoc": "idx_pesanan_pembeli"
+  },
   {"index": {
     "fields": ["type","id_penjual"]},
     "name": "idx_pesanan_penjual",
-    "ddoc": "idx_pesanan_penjual"},
+    "ddoc": "idx_pesanan_penjual"
+  },
   {"index": {
     "fields": ["type","status_pesanan","tanggal_pesanan"]},
     "name": "idx_pesanan_status_tanggal",
-    "ddoc": "idx_pesanan_status_tanggal"},
+    "ddoc": "idx_pesanan_status_tanggal"
+  },
   {"index": {
     "fields": ["type","id_pesanan"]},
     "name": "idx_penyewaan_pesanan",
-    "ddoc": "idx_penyewaan_pesanan"},
+    "ddoc": "idx_penyewaan_pesanan"
+  },
   {"index": {
     "fields": ["type","status_sewa"]},
     "name": "idx_penyewaan_status",
-    "ddoc": "idx_penyewaan_status"},
+    "ddoc": "idx_penyewaan_status"
+  },
   {"index": {
     "fields": ["type","id_produk"]},
     "name": "idx_ulasan_produk",
-    "ddoc": "idx_ulasan_produk"},
+    "ddoc": "idx_ulasan_produk"
+  },
   {"index": {
     "fields": ["type","id_pengguna"]},
     "name": "idx_ulasan_pengguna",
-    "ddoc": "idx_ulasan_pengguna"}
+    "ddoc": "idx_ulasan_pengguna"
+  },
+  {"index": {
+    "fields": ["type","id_pesanan"]}, 
+    "name": "idx_pengiriman_pesanan", 
+    "ddoc": "idx_pengiriman_pesanan"
+  }
 ]

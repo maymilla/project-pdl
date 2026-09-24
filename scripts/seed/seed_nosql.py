@@ -468,6 +468,7 @@ def seed_pengiriman():
     rows = fetch_all("""
         SELECT
             id_pengiriman,
+            id_pesanan,
             kurir,
             no_resi,
             tanggal_kirim,
@@ -482,6 +483,7 @@ def seed_pengiriman():
             "type": "pengiriman",
 
             "id_pengiriman": r["id_pengiriman"],
+            "id_pesanan": r["id_pesanan"],
             "kurir": r["kurir"],
             "no_resi": r["no_resi"],
             "tanggal_kirim": r["tanggal_kirim"],
