@@ -28,6 +28,9 @@ def cetak_dan_simpan(
         hasil_lines.append("Tidak ada data ditemukan / Hasil kosong.")
         divider_len = 75
     else:
+        if isinstance(data, dict):
+            data = [data]
+
         keys = list(data[0].keys())
 
         col_widths = {}

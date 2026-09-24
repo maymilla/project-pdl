@@ -1,0 +1,10 @@
+QUERY 1 DML
+Insert Pesanan Baru
+Waktu Jalan    : 2026-09-24T10:36:53.932515
+Waktu Eksekusi : 14.22 ms
+Total Record   : 3
+
+===========================================================
+OK   | ID              | REV                               
+-----+-----------------+-----------------------------------
+True | pesanan:test001 | 1-b50b296b199782422bfd0b8b288177ad
