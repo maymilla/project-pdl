@@ -29,6 +29,21 @@
     "stats_by_metode": {
       "map": "function (doc) {if (doc.type === 'pembayaran' && doc.status_pembayaran === 'berhasil') {emit(doc.metode_pembayaran, [1, doc.nominal]);}}",
       "reduce": "function (keys, values, rereduce) {var totalCount = 0;var totalNominal = 0; for (var i = 0; i < values.length; i++) {totalCount += values[i][0]; totalNominal += values[i][1];}return [totalCount, totalNominal];}"
+    },
+    "pesanan_selesai": {
+      "map": "function(doc) { if (doc.type === 'pesanan' && doc.status_pesanan === 'selesai') { emit(doc._id, null); } }"
+    },
+    "produk_terjual": {
+      "map": "function(doc) { if (doc.type === 'pesanan' && doc.status_pesanan === 'selesai') { doc.detail_pesanan.forEach(function(d) { if (d.jenis_transaksi === 'beli') { emit('produk:' + d.id_produk, null); } }); } }"
+    },
+    "produk_nonaktif_terjual": {
+      "map": "function(doc) { if (doc.type === 'produk' && (doc.status_produk === 'nonaktif' || doc.status_produk === 'terjual')) { emit(doc.id_produk, null); } }"
+    },
+    "transaksi_beli": {
+      "map": "function(doc) { if (doc.type === 'pesanan' && doc.status_pesanan === 'selesai') { doc.detail_pesanan.forEach(function(d) { if (d.jenis_transaksi === 'beli') { emit([d.id_produk, doc.id_pembeli], 1); } }); } }"
+    },
+    "ulasan_by_produk_user": {
+      "map": "function(doc) { if (doc.type === 'ulasan') { emit([doc.id_produk, doc.id_pengguna], 1); } }"
     }
   }
 }

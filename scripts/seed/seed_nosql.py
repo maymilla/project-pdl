@@ -563,18 +563,13 @@ def seed_valkey_ruang_chat():
         )
 
     pipe.execute()
-
     print(f"  Ruang chat: {len(rows)}")
 
 
 def seed_valkey():
-
     seed_valkey_produk_favorit()
-
     seed_valkey_ruang_chat()
-
     print("\nValkey selesai.")
-
 
 
 def seed_all():

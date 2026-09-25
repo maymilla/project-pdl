@@ -1,7 +1,7 @@
 QUERY 3 DML
 Delete Produk Favorit
-Waktu Jalan    : 2026-09-24T10:32:47.737835
-Waktu Eksekusi : 36577.16 ms
+Waktu Jalan    : 2026-09-25T12:53:52.387036
+Waktu Eksekusi : 12377.14 ms
 Total Record   : 1
 
 ==============

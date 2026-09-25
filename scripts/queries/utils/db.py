@@ -84,3 +84,41 @@ def couch_bulk_get(couch, ids):
         for r in rows
         if "doc" in r
     ]
+
+def couch_view(couch, design, view, key=None, include_docs=True):
+    params = {}
+
+    if include_docs:
+        params["include_docs"] = "true"
+
+    response = couch.get(
+        f"{_base_url()}/{_db_name()}/_design/{design}/_view/{view}",
+        params=params
+    )
+
+    print("URL:", response.url)
+    print("STATUS:", response.status_code)
+    print("RESPONSE:", response.text[:1000])
+
+    response.raise_for_status()
+
+    rows = response.json().get("rows", [])
+
+    return [
+        r["doc"]
+        for r in rows
+        if "doc" in r
+    ]
+
+def couch_view_keys(couch, design, view):
+    response = couch.get(
+        f"{_base_url()}/{_db_name()}/_design/{design}/_view/{view}"
+    )
+
+    response.raise_for_status()
+    rows = response.json().get("rows", [])
+
+    return [
+        r["key"]
+        for r in rows
+    ]

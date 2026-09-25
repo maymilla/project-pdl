@@ -1,12 +1,6 @@
 import time
 from pathlib import Path
-
-from scripts.queries.utils.db import (
-    koneksi_couchdb,
-    couch_find,
-    couch_put
-)
-
+from scripts.queries.utils.db import koneksi_couchdb, couch_view_keys, couch_put
 from scripts.queries.utils.output import cetak_dan_simpan
 
 OUTPUT_FILE = Path(__file__).resolve().parents[3] / "results" / "dml" / "query_4.txt"
@@ -15,52 +9,41 @@ couch = koneksi_couchdb()
 
 def insert_ulasan():
     start = time.perf_counter()
-
-    pesanan, _ = couch_find(
+    transaksi_beli = couch_view_keys(
         couch,
-        {
-            "type": "pesanan",
-            "status_pesanan": "selesai"
-        },
-        limit=20000
+        "views",
+        "transaksi_beli"
     )
+    ulasan_existing = set(
+        tuple(x)
+        for x in couch_view_keys(
+            couch,
+            "views",
+            "ulasan_by_produk_user"
+        )
+    )
+
     hasil = None
 
-    for p in pesanan:
-        for d in p.get("detail_pesanan", []):
-            if d.get("jenis_transaksi") == "beli":
+    for key in transaksi_beli:
+        id_produk = key[0]
+        id_pengguna = key[1]
 
-                id_produk = d["id_produk"]
-                id_pengguna = p["id_pembeli"]
+        if (id_produk, id_pengguna) not in ulasan_existing:
+            doc = {
+                "_id": f"ulasan:{id_produk}:{id_pengguna}",
+                "type": "ulasan",
+                "id_produk": id_produk,
+                "id_pengguna": id_pengguna,
+                "rating": 5,
+                "komentar": (
+                    "Produk sesuai dengan "
+                    "deskripsi dan kondisinya baik."
+                ),
+                "tanggal_ulasan": "2026-09-24"
+            }
 
-                ulasan, _ = couch_find(
-                    couch,
-                    {
-                        "type": "ulasan",
-                        "id_produk": id_produk,
-                        "id_pengguna": id_pengguna
-                    },
-                    limit=1
-                )
-                if len(ulasan) == 0:
-                    doc = {
-                        "_id": f"ulasan:{id_produk}:{id_pengguna}",
-                        "type": "ulasan",
-                        "id_produk": id_produk,
-                        "id_pengguna": id_pengguna,
-                        "rating": 5,
-                        "komentar": (
-                            "Produk sesuai dengan "
-                            "deskripsi dan kondisinya baik."
-                        ),
-                        "tanggal_ulasan": "2026-09-24"
-                    }
-                    hasil = couch_put(
-                        couch,
-                        doc
-                    )
-                    break
-        if hasil:
+            hasil = couch_put(couch, doc)
             break
 
     waktu = (

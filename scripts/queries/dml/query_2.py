@@ -1,64 +1,35 @@
 import time
 from pathlib import Path
-
-from scripts.queries.utils.db import (
-    koneksi_couchdb,
-    couch_find,
-    couch_get,
-    couch_bulk_docs
-)
-
+from scripts.queries.utils.db import (koneksi_couchdb, couch_bulk_docs, couch_bulk_get, couch_view_keys)
 from scripts.queries.utils.output import cetak_dan_simpan
 
-
-OUTPUT_FILE = (
-    Path(__file__).resolve().parents[3]
-    / "results"
-    / "dml"
-    / "query_2.txt"
-)
-
+OUTPUT_FILE = (Path(__file__).resolve().parents[3] / "results" / "dml" / "query_2.txt")
 
 couch = koneksi_couchdb()
 
-
 def update_produk_terjual():
     start = time.perf_counter()
-    pesanan, _ = couch_find(
-        couch,
-        {
-            "type": "pesanan",
-            "status_pesanan": "selesai"
-        },
-        limit=20000
+    produk_terjual = set(
+        couch_view_keys(
+            couch,
+            "views",
+            "produk_terjual"
+        )
     )
-    produk_terjual = set()
 
-    for p in pesanan:
-        for d in p.get(
-            "detail_pesanan",
-            []
-        ):
-            if d.get(
-                "jenis_transaksi"
-            ) == "beli":
-                
-                produk_terjual.add(
-                    d["id_produk"]
-                )
+    produk_ids = list(produk_terjual)
+    produk_list = couch_bulk_get(
+        couch,
+        produk_ids
+    )
 
     docs_update = []
 
-    for pid in produk_terjual:
-        produk = couch_get(
-            couch,
-            f"produk:{pid}"
+    for produk in produk_list:
+        produk["status_produk"] = "terjual"
+        docs_update.append(
+            produk
         )
-        if produk:
-            produk["status_produk"] = "terjual"
-            docs_update.append(
-                produk
-            )
 
     hasil_bulk = couch_bulk_docs(
         couch,
@@ -66,8 +37,9 @@ def update_produk_terjual():
     )
 
     waktu = (
-        time.perf_counter()-start
+        time.perf_counter() - start
     ) * 1000
+
     hasil = []
 
     for r in hasil_bulk:
@@ -80,7 +52,6 @@ def update_produk_terjual():
             )
 
     return waktu, hasil
-
 
 
 def main():
