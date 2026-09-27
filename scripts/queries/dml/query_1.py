@@ -14,15 +14,11 @@ def insert_pesanan():
     doc = {
         "_id": "pesanan:test001",
         "type": "pesanan",
-
         "id_penjual": 1,
         "id_pembeli": 2,
         "id_alamat": 1,
-
         "tanggal_pesanan": "2026-09-24",
-
         "status_pesanan": "menunggu_pembayaran",
-
         "detail_pesanan": [
             {
                 "no_urut": 1,
@@ -31,38 +27,31 @@ def insert_pesanan():
                 "harga": 150000
             }
         ],
-
         "pengiriman": None,
         "id_pembayaran": None
     }
-
 
     hasil = couch_put(
         couch,
         doc
     )
 
-
     waktu = (
         time.perf_counter()-start
     )*1000
 
-
     return waktu, hasil
 
 
-
 def main():
-
     waktu, hasil = insert_pesanan()
-
     cetak_dan_simpan(
         "QUERY 1 DML\nInsert Pesanan Baru",
         hasil,
         OUTPUT_FILE,
         waktu
     )
-
+    
 
 if __name__ == "__main__":
     main()

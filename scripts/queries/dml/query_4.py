@@ -22,13 +22,11 @@ def insert_ulasan():
             "ulasan_by_produk_user"
         )
     )
-
     hasil = None
 
     for key in transaksi_beli:
         id_produk = key[0]
         id_pengguna = key[1]
-
         if (id_produk, id_pengguna) not in ulasan_existing:
             doc = {
                 "_id": f"ulasan:{id_produk}:{id_pengguna}",
@@ -42,7 +40,6 @@ def insert_ulasan():
                 ),
                 "tanggal_ulasan": "2026-09-24"
             }
-
             hasil = couch_put(couch, doc)
             break
 

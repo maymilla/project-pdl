@@ -15,23 +15,19 @@ def delete_produk_favorit():
         "views",
         "produk_nonaktif_terjual"
     )
-
     jumlah = 0
-
+    
     for pid in produk_ids:
         pid = str(pid)
         users = vk.smembers(
             f"produk_favorit_user:{pid}"
         )
-
         if not users:
             vk.delete(
                 f"produk_favorit_user:{pid}"
             )
             continue
-
         pipe = vk.pipeline()
-
         for uid in users:
             pipe.srem(
                 f"produk_favorit:{uid}",
@@ -43,7 +39,6 @@ def delete_produk_favorit():
         )
 
         hasil = pipe.execute()
-
         for r in hasil[:-1]:
             jumlah += r
 
@@ -55,7 +50,6 @@ def delete_produk_favorit():
 
 def main():
     waktu, hasil = delete_produk_favorit()
-
     cetak_dan_simpan(
         "QUERY 3 DML\nDelete Produk Favorit",
         [

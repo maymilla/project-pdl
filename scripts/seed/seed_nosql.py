@@ -173,7 +173,7 @@ def seed_pesanan():
             p.tanggal_pesanan,
             p.status_pesanan,
             
-            -- EMBED: Data Pembeli langsung dimasukkan ke pesanan
+            -- EMBED: Data Pembeli
             json_build_object(
                 'id_pengguna', u.id_pengguna,
                 'nama', u.nama
