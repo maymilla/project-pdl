@@ -14,6 +14,8 @@
     "name": "idx_produk_kategori",
     "ddoc": "idx_produk_kategori"
   },
+
+
   {"index": {
     "fields": ["type","id_pembeli"]},
     "name": "idx_pesanan_pembeli",
@@ -29,6 +31,8 @@
     "name": "idx_pesanan_status_tanggal",
     "ddoc": "idx_pesanan_status_tanggal"
   },
+
+
   {"index": {
     "fields": ["type","id_pesanan"]},
     "name": "idx_penyewaan_pesanan",
@@ -39,6 +43,8 @@
     "name": "idx_penyewaan_status",
     "ddoc": "idx_penyewaan_status"
   },
+
+
   {"index": {
     "fields": ["type","id_produk"]},
     "name": "idx_ulasan_produk",
@@ -49,9 +55,24 @@
     "name": "idx_ulasan_pengguna",
     "ddoc": "idx_ulasan_pengguna"
   },
+
+
   {"index": {
     "fields": ["type","id_pesanan"]}, 
     "name": "idx_pengiriman_pesanan", 
     "ddoc": "idx_pengiriman_pesanan"
+  },
+  {"index": {
+    "fields": ["type","status_pengiriman"]}, 
+    "name": "idx_pengiriman_status", 
+    "ddoc": "idx_pengiriman_status"
+  },
+
+  
+  {"index": {
+    "fields": ["type","id_penjual","id_pembeli"]}, 
+    "name": "idx_ruangchat_pair", 
+    "ddoc": "idx_ruangchat_pair"
   }
+
 ]

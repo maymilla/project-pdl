@@ -1,0 +1,10 @@
+=== UPDATE PENGIRIMAN SAAT DISERAHKAN KE KURIR ===
+Waktu Jalan    : 2026-09-24T11:20:40.739845
+Waktu Eksekusi : 187.45 ms
+Total Record   : 1
+Database : CouchDB
+
+===================================================================================
+ID_PENGIRIMAN | STATUS_PENGIRIMAN | NO_RESI      | TANGGAL_KIRIM                   
+--------------+-------------------+--------------+---------------------------------
+1             | dikirim           | JNE123456789 | 2026-09-24T11:20:40.606629+07:00

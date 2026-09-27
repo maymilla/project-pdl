@@ -25,10 +25,13 @@ def get_next_id(doctype):
 
 
 def init_counter(doctype, nilai_awal):
-    """Set nilai awal counter — jalanin sekali setelah seeding awal,
-    supaya ID baru nggak numbrek ID yang udah ada di CouchDB."""
     vk.set(f"counter:{doctype}", nilai_awal)
     return vk.get(f"counter:{doctype}")
+
+def reserve_id_block(doctype, jumlah):
+    id_akhir = vk.incrby(f"counter:{doctype}", jumlah)
+    id_awal = id_akhir - jumlah + 1
+    return id_awal
 
 def timed(label, fn, *args, **kwargs):
     start = time.perf_counter()

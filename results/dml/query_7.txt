@@ -1,0 +1,10 @@
+=== INSERT PESAN + ROOM CHAT BARU ===
+Waktu Jalan    : 2026-09-27T07:36:50.216558
+Waktu Eksekusi : 474.61 ms
+Total Record   : 1
+Database : CouchDB + Valkey
+
+=======================================================================================================================
+ID_RUANG_CHAT | ROOM_BARU | SUMBER_LOOKUP                      | ID_PESAN | PESAN                                      
+--------------+-----------+------------------------------------+----------+--------------------------------------------
+10000         | True      | Valkey (SMEMBERS ruang_chat:10:25) | 100001   | Halo kak, apakah produk ini masih tersedia?
