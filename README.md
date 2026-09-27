@@ -367,15 +367,11 @@ Jika butuh data `gagal_kirim` terbaru untuk Query 5 dan 6, tambahkan data test t
 ### DML 9-12
 
 ```powershell
-.venv\Scripts\python.exe scripts/queries/dml/query_9.py                        # batalkan pesanan lewat batas bayar (--batas-jam, default 24)
-.venv\Scripts\python.exe scripts/queries/dml/query_10.py --id-pengembalian 1   # penyewaan -> selesai
-.venv\Scripts\python.exe scripts/queries/dml/query_11.py --id-penyewaan 1      # produk -> disewa
-.venv\Scripts\python.exe scripts/queries/dml/query_12.py --id-produk 1756      # produk -> tersedia
+.venv\Scripts\python.exe scripts/queries/dml/query_9.py
+.venv\Scripts\python.exe scripts/queries/dml/query_10.py
+.venv\Scripts\python.exe scripts/queries/dml/query_11.py
+.venv\Scripts\python.exe scripts/queries/dml/query_12.py
 ```
-
-Keempatnya menerima `--dry-run` untuk menampilkan kandidat tanpa menulis ke Valkey.
-
-> **Known issue:** Query 9-12 membaca dan menulis status di key Valkey `status:<entitas>:<id>` (misalnya `status:pesanan:1`). Seeding saat ini tidak membuat key tersebut, karena status disimpan di dokumen CouchDB (`status_pesanan`, `status_pembayaran`, `status_pengembalian`, dan seterusnya). Akibatnya Query 9-12 tidak akan menemukan kandidat sampai script-nya diubah untuk membaca status dari CouchDB, atau seeding diubah untuk mengisi key `status:*`.
 
 Versi SQL pembanding ada di `sql/queries/dml/`.
 
@@ -427,9 +423,9 @@ cd ..
 .venv\Scripts\python.exe scripts/queries/dml/query_7.py
 .venv\Scripts\python.exe scripts/queries/dml/query_8.py
 .venv\Scripts\python.exe scripts/queries/dml/query_9.py
-.venv\Scripts\python.exe scripts/queries/dml/query_10.py --id-pengembalian 1
-.venv\Scripts\python.exe scripts/queries/dml/query_11.py --id-penyewaan 1
-.venv\Scripts\python.exe scripts/queries/dml/query_12.py --id-produk 1756
+.venv\Scripts\python.exe scripts/queries/dml/query_10.py
+.venv\Scripts\python.exe scripts/queries/dml/query_11.py
+.venv\Scripts\python.exe scripts/queries/dml/query_12.py
 ```
 
 ### Kembali ke snapshot awal
