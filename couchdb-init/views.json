@@ -59,6 +59,9 @@
     },
     "ulasan_by_produk_user": {
       "map": "function(doc) { if (doc.type === 'ulasan') { emit([doc.id_produk, doc.id_pengguna], 1); } }"
+    },
+    "semua_pesanan_riwayat": {
+      "map": "function(doc) { if (doc.type === 'pesanan') { emit(doc.tanggal_pesanan, null); } }"
     }
   }
 }
