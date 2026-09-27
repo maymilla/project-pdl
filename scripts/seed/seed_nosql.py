@@ -166,7 +166,6 @@ def seed_produk():
 
 
 def seed_pesanan():
-    # Perhatikan bagaimana kita membungkus data Pembeli, Pembayaran, dan Produk ke dalam JSON pesanan
     rows = fetch_all("""
         SELECT
             p.id_pesanan,
