@@ -170,43 +170,59 @@ def seed_pesanan():
         SELECT
             p.id_pesanan,
             p.id_penjual,
-            p.id_pembeli,
-            p.id_alamat,
             p.tanggal_pesanan,
-            pb.id_pembayaran,
             p.status_pesanan,
+            
+            -- EMBED: Data Pembeli langsung dimasukkan ke pesanan
+            json_build_object(
+                'id_pengguna', u.id_pengguna,
+                'nama', u.nama
+            ) AS pembeli,
 
+            -- EMBED: Data Pembayaran 
+            json_build_object(
+                'id_pembayaran', pb.id_pembayaran,
+                'metode_pembayaran', pb.metode_pembayaran,
+                'status_pembayaran', pb.status_pembayaran
+            ) AS pembayaran,
+
+            -- EMBED: Data Pengiriman
             (
                 SELECT json_agg(
                     json_build_object(
                         'id_pengiriman', pg.id_pengiriman,
                         'tanggal_kirim', pg.tanggal_kirim,
-                        'tanggal_terima', pg.tanggal_terima
+                        'tanggal_terima', pg.tanggal_terima,
+                        'status_pengiriman', pg.status_pengiriman
                     )
                 )
                 FROM pengiriman pg
                 WHERE pg.id_pesanan=p.id_pesanan
             ) AS pengiriman,
 
-
+            -- EMBED: Detail Pesanan + Nama Produk + Status Sewa
             (
                 SELECT json_agg(
                     json_build_object(
                         'no_urut', d.no_urut,
                         'id_produk', d.id_produk,
+                        'nama_produk', pr.nama_produk, 
                         'jenis_transaksi', d.jenis_transaksi,
-                        'harga', d.harga
+                        'harga', d.harga,
+                        'status_sewa', sy.status_sewa,
+                        'status_pengembalian', gb.status_pengembalian
                     )
                 )
                 FROM detail_pesanan d
+                JOIN produk pr ON d.id_produk = pr.id_produk
+                LEFT JOIN penyewaan sy ON sy.id_pesanan = d.id_pesanan AND sy.no_urut = d.no_urut
+                LEFT JOIN pengembalian gb ON gb.id_penyewaan = sy.id_penyewaan
                 WHERE d.id_pesanan=p.id_pesanan
             ) AS detail_pesanan
 
-
         FROM pesanan p
-
-        LEFT JOIN pembayaran pb
-        ON pb.id_pesanan=p.id_pesanan
+        LEFT JOIN pengguna u ON p.id_pembeli = u.id_pengguna
+        LEFT JOIN pembayaran pb ON pb.id_pesanan=p.id_pesanan
     """)
 
     docs=[

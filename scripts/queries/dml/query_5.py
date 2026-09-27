@@ -224,7 +224,7 @@ if __name__ == "__main__":
     cetak_dan_simpan(
         judul="=== INSERT PENGIRIMAN ULANG (GAGAL KIRIM ≤ 3 HARI) ===",
         data=data_hasil,
-        output_file="results/dml/query_5_test.txt",
+        output_file="results/dml/query_5.txt",
         exec_time_ms=duration_ms,
         meta_extra=["Database : CouchDB + Valkey (bulk read/write)"],
     )

@@ -12,11 +12,11 @@ def get_penyewaan_terlambat(client=None):
     client = client or ReadClient()
     rows = client.view("penyewaan_terlambat", include_docs=True)
     joined = list(rental_details(client, rows))
-    users = client.documents("pengguna", (order["id_pembeli"] for _, order, _ in joined))
+    users = client.documents("pengguna", (order.get("pembeli", {}).get("id_pengguna") for _, order, _ in joined))
     products = client.documents("produk", (detail["id_produk"] for _, _, detail in joined))
     result = []
     for row, order, detail in joined:
-        user = users.get(clean_id(order["id_pembeli"]))
+        user = users.get(clean_id(order.get("pembeli", {}).get("id_pengguna")))
         product = products.get(clean_id(detail["id_produk"]))
         if not user or not product:
             continue
