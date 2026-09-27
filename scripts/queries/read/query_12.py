@@ -27,8 +27,6 @@ def get_semua_riwayat_transaksi():
     skip = 0
     total_diproses = 0
     
-    print("Memulai pengambilan data riwayat transaksi via View...")
-
     while True:
         params = {
             "include_docs": "true",
@@ -96,12 +94,9 @@ def get_semua_riwayat_transaksi():
                 })
         
         total_diproses += len(pesanan_batch)
-        print(f"-> Berhasil memproses {total_diproses} dokumen...")
+        print(f"-> Berhasil memproses {total_diproses} dokumen")
         
         skip += limit_per_batch 
-     
-        if total_diproses >= 5000: 
-             break
 
     hasil_akhir.sort(key=lambda x: str(x["id_pengguna"]))
 
