@@ -1,126 +1,69 @@
-import argparse
-import os
+import json
+from pathlib import Path
+import sys
 import time
 from datetime import datetime, timedelta
-from pathlib import Path
 
-import requests
-from dotenv import load_dotenv
-from valkey import Valkey
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
+from scripts.queries.utils.db import _base_url, _db_name, koneksi_couchdb, couch_bulk_docs
+from scripts.queries.utils.output import cetak_dan_simpan
 
-ROOT_DIR = Path(__file__).resolve().parents[3]
-OUTPUT_FILE = ROOT_DIR / "results" / "dml" / "query_9.txt"
+couch = koneksi_couchdb()
 
+def key(value):
+    return str(value).rsplit(":", 1)[-1]
 
-def koneksi_valkey():
-    return Valkey(
-        host=os.getenv("VALKEY_HOST", "127.0.0.1"),
-        port=int(os.getenv("VALKEY_PORT", "6379")),
-        db=int(os.getenv("VALKEY_DB", "0")),
-        decode_responses=True,
-    )
+def load_documents(kind):
+    params = {
+        "include_docs": "true", "limit": 500,
+        "startkey": json.dumps(kind + ":"), "endkey": json.dumps(kind + ":\ufff0"),
+    }
+    documents = {}
+    while True:
+        response = couch.get(f"{_base_url()}/{_db_name()}/_all_docs", params=params, timeout=120)
+        response.raise_for_status()
+        rows = response.json()["rows"]
+        for row in rows:
+            document = row.get("doc")
+            if document and not document.get("_deleted") and document.get("type") == kind:
+                documents[key(document["_id"])] = document
+        if len(rows) < 500:
+            return documents
+        params = {**params, "startkey": json.dumps(rows[-1]["id"]), "skip": 1}
 
-
-def koneksi_couchdb():
-    session = requests.Session()
-    session.auth = (os.getenv("COUCH_USER"), os.getenv("COUCH_PASSWORD"))
-    return session
-
-
-def couch_find(couch, selector, fields=None, limit=1000):
-    base_url = os.getenv("COUCH_URL", "http://127.0.0.1:5984").rstrip("/")
-    database = os.getenv("COUCH_DB", "gayang")
-    body = {"selector": selector, "limit": limit}
-    if fields:
-        body["fields"] = fields
-    start = time.perf_counter()
-    response = couch.post(f"{base_url}/{database}/_find", json=body)
-    elapsed_ms = (time.perf_counter() - start) * 1000
-    response.raise_for_status()
-    return response.json().get("docs", []), elapsed_ms
-
-
-def batalkan_pesanan_lewat_batas_pembayaran(couch, valkey, batas_jam=24, eksekusi_tulis=True):
-    batas_waktu = (datetime.utcnow() - timedelta(hours=batas_jam)).isoformat()
-
-    kandidat, elapsed_ms = couch_find(
-        couch,
-        {"type": "pesanan", "tanggal_pesanan": {"$lt": batas_waktu}},
-        fields=["_id", "tanggal_pesanan", "pembayaran"],
-        limit=100000,
-    )
-
-    dibatalkan = []
-    for doc in kandidat:
-        id_pesanan = doc["_id"].split(":")[1]
-
-        status_pesanan = valkey.get(f"status:pesanan:{id_pesanan}")
-        if status_pesanan != "menunggu_pembayaran":
+def batalkan_pesanan():
+    cutoff = datetime.now().astimezone() - timedelta(hours=24)
+    paid = {
+        key(payment["id_pesanan"]) for payment in load_documents("pembayaran").values()
+        if payment.get("status_pembayaran") == "berhasil"
+    }
+    candidates = []
+    for order in load_documents("pesanan").values():
+        if order.get("status_pesanan") != "menunggu_pembayaran":
             continue
-
-        pembayaran = doc.get("pembayaran") or {}
-        id_pembayaran = pembayaran.get("id_pembayaran")
-        status_pembayaran = valkey.get(f"status:pembayaran:{id_pembayaran}") if id_pembayaran else None
-
-        if status_pembayaran == "berhasil":
+        if key(order.get("id_pesanan", order["_id"])) in paid or not order.get("tanggal_pesanan"):
             continue
-
-        if eksekusi_tulis:
-            valkey.set(f"status:pesanan:{id_pesanan}", "dibatalkan")
-
-        dibatalkan.append(id_pesanan)
-
-    return dibatalkan, len(kandidat), elapsed_ms
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Query 9 (DML NoSQL): batalkan pesanan yang melewati batas pembayaran."
-    )
-    parser.add_argument("--batas-jam", type=int, default=24, help="Batas jam sejak pesanan dibuat (default: 24)")
-    parser.add_argument("--dry-run", action="store_true", help="Hanya tampilkan kandidat tanpa menulis ke Valkey")
-    args = parser.parse_args()
-
-    load_dotenv(ROOT_DIR / ".env")
-    couch = koneksi_couchdb()
-    valkey = koneksi_valkey()
-
-    mulai = time.perf_counter()
-    dibatalkan, jumlah_kandidat, elapsed_ms = batalkan_pesanan_lewat_batas_pembayaran(
-        couch, valkey, args.batas_jam, eksekusi_tulis=not args.dry_run
-    )
-    waktu_ms = (time.perf_counter() - mulai) * 1000
-
-    lines = [
-        "=== Query 9 (DML): Batalkan Pesanan Lewat Batas Pembayaran (NoSQL) ===",
-        f"Waktu jalan  : {datetime.now().isoformat()}",
-        f"CouchDB      : {os.getenv('COUCH_URL', 'http://127.0.0.1:5984')}  DB: {os.getenv('COUCH_DB', 'gayang')}",
-        f"Valkey       : {os.getenv('VALKEY_HOST', '127.0.0.1')}:{os.getenv('VALKEY_PORT', '6379')}  DB: {os.getenv('VALKEY_DB', '0')}",
-        f"mode         : {'DRY-RUN (tanpa tulis)' if args.dry_run else 'EKSEKUSI (tulis ke Valkey)'}",
-        "",
-        "=" * 70,
-        "HASIL QUERY: PESANAN DIBATALKAN (LEWAT BATAS PEMBAYARAN)",
-        "=" * 70,
-        f"waktu round-trip _find : {elapsed_ms:.3f} ms",
-        f"waktu total query      : {waktu_ms:.3f} ms",
-        f"pesanan diperiksa (_find, tanggal < batas) : {jumlah_kandidat}",
-        f"pesanan dibatalkan     : {len(dibatalkan)}",
-        "",
-    ]
-
-    if dibatalkan:
-        for nomor, id_pesanan in enumerate(dibatalkan, start=1):
-            lines.append(f"{nomor}. SET status:pesanan:{id_pesanan} -> dibatalkan")
-    else:
-        lines.append("Tidak ada pesanan yang perlu dibatalkan.")
-
-    output = "\n".join(lines)
-    print(output)
-    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_FILE.write_text(output + "\n", encoding="utf-8")
-    print(f"\n>>> Hasil lengkap tersimpan di: {OUTPUT_FILE}")
-
+        created = datetime.fromisoformat(order["tanggal_pesanan"])
+        created = created.astimezone()
+        if created < cutoff:
+            candidates.append(order)
+    results = []
+    for document in candidates:
+        document["status_pesanan"] = "dibatalkan"
+    for start in range(0, len(candidates), 500):
+        results.extend(couch_bulk_docs(couch, candidates[start:start + 500]))
+    return results
 
 if __name__ == "__main__":
-    main()
+    start = time.perf_counter()
+    results = batalkan_pesanan()
+    cetak_dan_simpan(
+        judul="QUERY 9 DML: batalkan pesanan",
+        data=results,
+        output_file=PROJECT_ROOT / "results/dml/query_9.txt",
+        exec_time_ms=(time.perf_counter() - start) * 1000,
+        meta_extra=["Database : CouchDB"],
+    )
