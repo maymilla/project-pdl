@@ -12,71 +12,93 @@ from utils.output import cetak_dan_simpan
 COUCHDB_URL = "http://localhost:5984/gayang"
 AUTH = ("admin_gayang", "gayang123")
 
-
 session = requests.Session()
 session.auth = AUTH
 
-def get_riwayat_transaksi_pengguna(id_pembeli=1):
-    docs = []
-    for target_id in [int(id_pembeli), str(id_pembeli), f"pengguna:{id_pembeli}"]:
-        payload = {
-            "selector": {
-                "type": "pesanan",
-                "id_pembeli": target_id
-            }
-        }
-        res = session.post(f"{COUCHDB_URL}/_find", json=payload).json()
-        docs = res.get("docs", [])
-        if docs:
-            break
+def get_semua_riwayat_transaksi():
+    payload = {
+        "selector": {
+            "type": "pesanan"
+        },
+        "limit": 10000  
+    }
+    res = session.post(f"{COUCHDB_URL}/_find", json=payload).json()
+    pesanan_docs = res.get("docs", [])
 
-    if not docs:
+    if not pesanan_docs:
         print("Data pesanan tidak ditemukan di CouchDB.")
         return []
 
-    docs.sort(key=lambda x: x.get("tanggal_pesanan", ""), reverse=True)
-
-    res_user = session.get(f"{COUCHDB_URL}/pengguna:{id_pembeli}").json()
-    nama_user = res_user.get("nama", "Unknown")
-
     hasil_akhir = []
-    for ps in docs:
-        id_pesanan = ps["_id"]
-        details = ps.get("detail_pesanan") or []
+    
+    user_cache = {}
+    produk_cache = {}
+    pembayaran_cache = {}
+
+    penyewaan_cache = {} 
+    pengembalian_cache = {}
+
+    for ps in pesanan_docs:
+        id_pesanan = ps.get("_id")
+        id_pembeli = ps.get("id_pembeli")
+        
+        if id_pembeli not in user_cache:
+            user_key = id_pembeli if str(id_pembeli).startswith("pengguna:") else f"pengguna:{id_pembeli}"
+            res_user = session.get(f"{COUCHDB_URL}/{user_key}").json()
+            user_cache[id_pembeli] = res_user.get("nama", "Unknown")
+        nama_user = user_cache[id_pembeli]
+
+        id_pembayaran = ps.get("id_pembayaran")
+        if id_pembayaran and id_pembayaran not in pembayaran_cache:
+            res_pb = session.get(f"{COUCHDB_URL}/pembayaran:{id_pembayaran}").json()
+            pembayaran_cache[id_pembayaran] = res_pb.get("status_pembayaran")
+        status_pembayaran = pembayaran_cache.get(id_pembayaran) if id_pembayaran else None
+
         pengiriman_list = ps.get("pengiriman") or []
         status_kirim = pengiriman_list[0].get("status_pengiriman") if pengiriman_list else None
 
-        id_pembayaran = ps.get("id_pembayaran")
-        pb_doc = session.get(f"{COUCHDB_URL}/pembayaran:{id_pembayaran}").json() if id_pembayaran else {}
-
+        details = ps.get("detail_pesanan") or []
+        
         for dp in details:
             id_produk = dp.get("id_produk")
-            prod_doc = session.get(f"{COUCHDB_URL}/produk:{id_produk}").json() if id_produk else {}
+            if id_produk and id_produk not in produk_cache:
+                res_prod = session.get(f"{COUCHDB_URL}/produk:{id_produk}").json()
+                produk_cache[id_produk] = res_prod.get("nama_produk")
+            nama_produk = produk_cache.get(id_produk)
+
+            status_sewa = dp.get("status_sewa") 
+            status_pengembalian = dp.get("status_pengembalian")
 
             hasil_akhir.append({
+                "id_pengguna": id_pembeli,
                 "nama": nama_user,
                 "id_pesanan": id_pesanan,
-                "tanggal_pesanan": ps.get("tanggal_pesanan"),
-                "nama_produk": prod_doc.get("nama_produk"),
+                "tanggal_pesanan": ps.get("tanggal_pesanan", ""),
+                "nama_produk": nama_produk,
                 "jenis_transaksi": dp.get("jenis_transaksi"),
                 "harga": dp.get("harga"),
                 "status_pesanan": ps.get("status_pesanan"),
-                "status_pembayaran": pb_doc.get("status_pembayaran"),
-                "status_pengiriman": status_kirim
+                "status_pembayaran": status_pembayaran,
+                "status_pengiriman": status_kirim,
+                "status_sewa": status_sewa,
+                "status_pengembalian": status_pengembalian
             })
+
+    hasil_akhir.sort(key=lambda x: x["tanggal_pesanan"], reverse=True)
+    hasil_akhir.sort(key=lambda x: str(x["id_pengguna"]))
 
     return hasil_akhir
 
 if __name__ == "__main__":
     start_time = time.perf_counter()
 
-    data_hasil = get_riwayat_transaksi_pengguna(1)
+    data_hasil = get_semua_riwayat_transaksi()
 
     end_time = time.perf_counter()
     duration_ms = (end_time - start_time) * 1000
 
     cetak_dan_simpan(
-        judul="=== RIWAYAT TRANSAKSI PENGGUNA ===",
+        judul="=== RIWAYAT TRANSAKSI SEMUA PENGGUNA ===",
         data=data_hasil,
         output_file="results/read/query_12.txt",
         exec_time_ms=duration_ms,
