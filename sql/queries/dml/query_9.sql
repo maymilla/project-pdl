@@ -1,4 +1,4 @@
--- Update status pesanan menjadi batal untuk pesanan yang melewati batas pembayaran.
+-- Update status pesanan menjadi batal untuk pesanan yang melewati batas pembayaran.\
 
 UPDATE pesanan p
 SET status_pesanan = 'dibatalkan'
