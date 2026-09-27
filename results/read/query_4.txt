@@ -1,0 +1,29 @@
+=== TOP PENJUAL PENDAPATAN ===
+Waktu Jalan    : 2026-09-27T11:05:11.810742
+Waktu Eksekusi : 2469.54 ms
+Total Record   : 20
+Database : CouchDB
+
+======================================================================
+ID_PENGGUNA | NAMA_PENJUAL  | TOTAL_PENDAPATAN | JUMLAH_PRODUK_TERJUAL
+------------+---------------+------------------+----------------------
+2815        | Pengguna 2815 | 1490000.0        | 5                    
+8097        | Pengguna 8097 | 1460000.0        | 5                    
+5686        | Pengguna 5686 | 1440000.0        | 4                    
+5050        | Pengguna 5050 | 1360000.0        | 5                    
+7095        | Pengguna 7095 | 1340000.0        | 4                    
+1873        | Pengguna 1873 | 1290000.0        | 4                    
+7389        | Pengguna 7389 | 1220000.0        | 4                    
+8116        | Pengguna 8116 | 1210000.0        | 5                    
+1400        | Pengguna 1400 | 1180000.0        | 3                    
+2506        | Pengguna 2506 | 1160000.0        | 4                    
+5289        | Pengguna 5289 | 1150000.0        | 4                    
+5424        | Pengguna 5424 | 1130000.0        | 3                    
+7179        | Pengguna 7179 | 1130000.0        | 4                    
+9026        | Pengguna 9026 | 1120000.0        | 4                    
+1632        | Pengguna 1632 | 1110000.0        | 4                    
+6103        | Pengguna 6103 | 1110000.0        | 3                    
+2375        | Pengguna 2375 | 1090000.0        | 4                    
+3912        | Pengguna 3912 | 1050000.0        | 3                    
+476         | Pengguna 476  | 1040000.0        | 3                    
+2287        | Pengguna 2287 | 1000000.0        | 3                    

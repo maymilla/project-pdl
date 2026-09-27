@@ -1,0 +1,39 @@
+=== TREN PENDAPATAN BULANAN PER KATEGORI ===
+Waktu Jalan    : 2026-09-27T11:04:24.345753
+Waktu Eksekusi : 4774.30 ms
+Total Record   : 30
+Database : CouchDB
+
+===========================================
+BULAN   | NAMA_KATEGORI  | TOTAL_PENDAPATAN
+--------+----------------+-----------------
+2026-09 | Jaket          | 264650000       
+2026-09 | Aksesori       | 244020000       
+2026-09 | Pakaian Wanita | 239850000       
+2026-09 | Tas            | 239320000       
+2026-09 | Sepatu         | 239100000       
+2026-09 | Pakaian Pria   | 234500000       
+2026-08 | Jaket          | 1155470000      
+2026-08 | Sepatu         | 1125490000      
+2026-08 | Pakaian Wanita | 1121890000      
+2026-08 | Pakaian Pria   | 1102590000      
+2026-08 | Tas            | 1070330000      
+2026-08 | Aksesori       | 1069020000      
+2026-07 | Jaket          | 1136040000      
+2026-07 | Sepatu         | 1086260000      
+2026-07 | Pakaian Wanita | 1085570000      
+2026-07 | Aksesori       | 1067700000      
+2026-07 | Pakaian Pria   | 1062300000      
+2026-07 | Tas            | 1042060000      
+2026-06 | Jaket          | 1112130000      
+2026-06 | Pakaian Wanita | 1076180000      
+2026-06 | Sepatu         | 1065950000      
+2026-06 | Tas            | 1053590000      
+2026-06 | Pakaian Pria   | 1023460000      
+2026-06 | Aksesori       | 1019110000      
+2026-05 | Jaket          | 795980000       
+2026-05 | Pakaian Wanita | 775080000       
+2026-05 | Sepatu         | 756820000       
+2026-05 | Pakaian Pria   | 751720000       
+2026-05 | Aksesori       | 736830000       
+2026-05 | Tas            | 720180000       

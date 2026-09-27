@@ -2,15 +2,30 @@
   "_id": "_design/views",
   "views": {
     "pendapatan_per_kategori": {
-      "map": "function(doc) { if (doc.type === 'pesanan' && doc.status_pesanan === 'selesai') { doc.detail_pesanan.forEach(function(d) { var bulan = doc.tanggal_pesanan.substring(0,7); emit([d.id_produk, bulan], d.harga); }); } }",
+      "map": "function(doc) { if (doc.type === 'pesanan' && doc.tanggal_pesanan) { (doc.detail_pesanan || []).forEach(function(d) { var bulan = doc.tanggal_pesanan.substring(0,7); emit([d.id_produk, bulan], d.harga || 0); }); } }",
       "reduce": "_sum"
     },
     "detail_by_produk": {
       "map": "function(doc) { if (doc.type === 'pesanan') { doc.detail_pesanan.forEach(function(d) { emit(d.id_produk, {jenis_transaksi: d.jenis_transaksi, harga: d.harga}); }); } }"
     },
     "penyewaan_by_user_produk": {
-      "map": "function(doc) { if (doc.type === 'pesanan') { doc.detail_pesanan.forEach(function(d) { if (d.jenis_transaksi === 'sewa') { emit([doc.id_pembeli, d.id_produk], 1); } }); } }",
+      "map": "function(doc) { if (doc.type === 'pesanan') { (doc.detail_pesanan || []).forEach(function(d) { if (d.jenis_transaksi === 'sewa') { emit([doc.id_pembeli, d.id_produk], 1); } }); } }",
       "reduce": "_count"
+    },
+    "pembayaran_berhasil_per_pesanan": {
+      "map": "function(doc) { if (doc.type === 'pembayaran' && doc.status_pembayaran === 'berhasil') { emit(doc.id_pesanan, 1); } }",
+      "reduce": "_count"
+    },
+    "ulasan_per_pengguna": {
+      "map": "function(doc) { if (doc.type === 'ulasan') { emit(doc.id_pengguna, 1); } }",
+      "reduce": "_count"
+    },
+    "penyewaan_per_detail": {
+      "map": "function(doc) { if (doc.type === 'penyewaan') { emit([doc.id_pesanan, doc.no_urut], 1); } }",
+      "reduce": "_count"
+    },
+    "penyewaan_terlambat": {
+      "map": "function(doc) { if (doc.type === 'penyewaan' && doc.status_sewa === 'terlambat') { emit([doc.id_pesanan, doc.no_urut], null); } }"
     },
     "pengiriman_gagal": {
       "map": "function(doc) { if (doc.type === 'pesanan' && doc.pengiriman) { doc.pengiriman.forEach(function(p) { if (p.status_pengiriman === 'gagal') { emit(p.status_pengiriman, {id_pesanan: doc.id_pesanan, tanggal_kirim: p.tanggal_kirim}); } }); } }"

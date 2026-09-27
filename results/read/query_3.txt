@@ -1,0 +1,16 @@
+=== PENGGUNA SEWA PRODUK BERULANG ===
+Waktu Jalan    : 2026-09-27T11:34:44.517562
+Waktu Eksekusi : 1074.34 ms
+Total Record   : 7
+Database : CouchDB
+
+=======================================================
+NAMA_PEMBELI  | NAMA_PRODUK          | JUMLAH_TRANSAKSI
+--------------+----------------------+-----------------
+Pengguna 130  | Produk Fashion 7029  | 2               
+Pengguna 581  | Produk Fashion 7780  | 2               
+Pengguna 2098 | Produk Fashion 2740  | 2               
+Pengguna 2984 | Produk Fashion 1410  | 2               
+Pengguna 3302 | Produk Fashion 5708  | 2               
+Pengguna 4772 | Produk Fashion 16093 | 2               
+Pengguna 7674 | Produk Fashion 3406  | 2               

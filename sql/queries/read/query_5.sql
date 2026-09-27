@@ -5,7 +5,8 @@ WITH jumlah_sewa_produk AS (
         COUNT(*) AS jumlah_penyewaan
     FROM detail_pesanan dp
     JOIN penyewaan py
-        ON dp.id_detail = py.id_detail
+        ON dp.id_pesanan = py.id_pesanan
+        AND dp.no_urut = py.no_urut
     GROUP BY dp.id_produk
 ),
 rating_produk AS (

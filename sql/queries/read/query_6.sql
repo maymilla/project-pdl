@@ -9,7 +9,8 @@ SELECT
     pg.status_pengembalian
 FROM penyewaan py
 JOIN detail_pesanan dp
-    ON py.id_detail = dp.id_detail
+    ON py.id_pesanan = dp.id_pesanan
+    AND py.no_urut = dp.no_urut
 JOIN pesanan ps
     ON dp.id_pesanan = ps.id_pesanan
 JOIN pengguna p

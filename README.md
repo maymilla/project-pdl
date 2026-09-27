@@ -304,6 +304,12 @@ Karena `seed_nosql.py` menghapus database `gayang`, **jalankan ulang `init.ps1` 
 
 | Query | Deskripsi | Sumber data |
 |---|---|---|
+| 1 | Tren pendapatan bulanan per kategori | view `pendapatan_per_kategori` + dokumen produk |
+| 2 | Top 10 pembeli berdasarkan total belanja dan jumlah ulasan | pembayaran berhasil + pesanan + ulasan per pengguna |
+| 3 | Pengguna yang menyewa produk sama lebih dari sekali | view `penyewaan_by_user_produk` |
+| 4 | Top 20 penjual berdasarkan pendapatan pembelian selesai | pembayaran berhasil + detail pembelian pada pesanan selesai |
+| 5 | Produk paling sering disewa beserta jumlah ulasan dan rating | view `penyewaan_per_detail` + `rating_per_produk` |
+| 6 | Penyewaan terlambat beserta status pengembalian | view `penyewaan_terlambat` + dokumen pesanan/pengguna/produk |
 | 7 | Produk yang paling sering difavoritkan beserta penjualnya | Valkey `produk_favorit_user:*` + CouchDB |
 | 8 | Metode pembayaran terbanyak beserta jumlah transaksi berhasil dan total nominal | view `stats_by_metode` |
 | 9 | 10 produk dengan rating di atas rata-rata, beserta jumlah ulasan dan kategori | view `rating_per_produk` |
@@ -312,6 +318,12 @@ Karena `seed_nosql.py` menghapus database `gayang`, **jalankan ulang `init.ps1` 
 | 12 | Riwayat transaksi lengkap pengguna | Mango `_find` pada `pesanan` |
 
 ```powershell
+.venv\Scripts\python.exe scripts/queries/read/query_1.py
+.venv\Scripts\python.exe scripts/queries/read/query_2.py
+.venv\Scripts\python.exe scripts/queries/read/query_3.py
+.venv\Scripts\python.exe scripts/queries/read/query_4.py
+.venv\Scripts\python.exe scripts/queries/read/query_5.py
+.venv\Scripts\python.exe scripts/queries/read/query_6.py
 .venv\Scripts\python.exe scripts/queries/read/query_7.py
 .venv\Scripts\python.exe scripts/queries/read/query_8.py
 .venv\Scripts\python.exe scripts/queries/read/query_9.py

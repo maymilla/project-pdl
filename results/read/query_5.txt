@@ -1,0 +1,13 @@
+=== PRODUK PENYEWAAN TERTINGGI ===
+Waktu Jalan    : 2026-09-27T11:35:21.244272
+Waktu Eksekusi : 8005.41 ms
+Total Record   : 4
+Database : CouchDB
+
+======================================================================================
+ID_PRODUK | NAMA_PRODUK          | JUMLAH_PENYEWAAN | JUMLAH_ULASAN | RATA_RATA_RATING
+----------+----------------------+------------------+---------------+-----------------
+16434     | Produk Fashion 16434 | 10               | 0             | 0               
+1384      | Produk Fashion 1384  | 10               | 1             | 1.00            
+9172      | Produk Fashion 9172  | 10               | 2             | 2.00            
+17575     | Produk Fashion 17575 | 10               | 1             | 4.00            

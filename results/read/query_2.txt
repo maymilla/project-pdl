@@ -1,0 +1,19 @@
+=== TOP PENGGUNA TOTAL BELANJA ===
+Waktu Jalan    : 2026-09-27T11:34:26.975611
+Waktu Eksekusi : 3474.11 ms
+Total Record   : 10
+Database : CouchDB
+
+===================================================================================================================
+ID_PENGGUNA | NAMA_PENGGUNA | EMAIL                                                 | TOTAL_BELANJA | JUMLAH_ULASAN
+------------+---------------+-------------------------------------------------------+---------------+--------------
+9651        | Pengguna 9651 | user9651_9c7de009ceb1dd0ed0d7cf0d24739024@example.com | 3850000.0     | 1            
+985         | Pengguna 985  | user985_087b94c8254e43d0423af474eed16314@example.com  | 3820000.0     | 1            
+6305        | Pengguna 6305 | user6305_47d811f25dffd02db3a22a4207df1eb6@example.com | 3810000.0     | 2            
+5894        | Pengguna 5894 | user5894_951e316a033ac21f68dd1dbb5052757f@example.com | 3720000.0     | 3            
+9131        | Pengguna 9131 | user9131_c1d992fb2eddf7e17421e64ae5075a45@example.com | 3720000.0     | 2            
+3082        | Pengguna 3082 | user3082_5cc9052b13f6bcebce35fdbc7c300085@example.com | 3660000.0     | 0            
+9339        | Pengguna 9339 | user9339_4e7c6941323b45be84f24b3edf12d4c8@example.com | 3650000.0     | 2            
+2701        | Pengguna 2701 | user2701_75150158922f117d159aff3b265d94ee@example.com | 3580000.0     | 2            
+7337        | Pengguna 7337 | user7337_57c8c3990d3a7e49c38f9c5df330f268@example.com | 3570000.0     | 5            
+3643        | Pengguna 3643 | user3643_e313a8982af0cef5de0e6e72afe53430@example.com | 3560000.0     | 2            
