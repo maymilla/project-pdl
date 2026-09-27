@@ -15,97 +15,59 @@ AUTH = ("admin_gayang", "gayang123")
 session = requests.Session()
 session.auth = AUTH
 
-def get_semua_riwayat_transaksi():
+def get_semua_riwayat_transaksi_denormalized():
     view_url = f"{COUCHDB_URL}/_design/views/_view/semua_pesanan_riwayat"
     
     hasil_akhir = []
-    user_cache = {}
-    produk_cache = {}
-    pembayaran_cache = {}
-
-    limit_per_batch = 5000  
+    limit_per_batch = 5000 
     skip = 0
-    total_diproses = 0
-    
+
     while True:
         params = {
             "include_docs": "true",
-            "descending": "true", 
+            "descending": "true",
             "limit": limit_per_batch,
             "skip": skip
         }
         
         res = session.get(view_url, params=params).json()
-        
-        if "error" in res:
-            print(f"Error CouchDB: {res}")
-            break
-            
         rows = res.get("rows", [])
         if not rows:
-            break  
+            break
 
-        pesanan_batch = [row["doc"] for row in rows if "doc" in row]
-
-        for ps in pesanan_batch:
-            id_pesanan = ps.get("_id")
-            id_pembeli = ps.get("id_pembeli")
+        for row in rows:
+            ps = row["doc"]
             
-            if id_pembeli not in user_cache:
-                user_key = id_pembeli if str(id_pembeli).startswith("pengguna:") else f"pengguna:{id_pembeli}"
-                res_user = session.get(f"{COUCHDB_URL}/{user_key}").json()
-                user_cache[id_pembeli] = res_user.get("nama", "Unknown")
-            nama_user = user_cache[id_pembeli]
-
-            id_pembayaran = ps.get("id_pembayaran")
-            if id_pembayaran and id_pembayaran not in pembayaran_cache:
-                res_pb = session.get(f"{COUCHDB_URL}/pembayaran:{id_pembayaran}").json()
-                pembayaran_cache[id_pembayaran] = res_pb.get("status_pembayaran")
-            status_pembayaran = pembayaran_cache.get(id_pembayaran) if id_pembayaran else None
-
+            pembeli = ps.get("pembeli", {})
+            pembayaran = ps.get("pembayaran", {})
             pengiriman_list = ps.get("pengiriman") or []
             status_kirim = pengiriman_list[0].get("status_pengiriman") if pengiriman_list else None
-
-            details = ps.get("detail_pesanan") or []
             
-            for dp in details:
-                id_produk = dp.get("id_produk")
-                if id_produk and id_produk not in produk_cache:
-                    res_prod = session.get(f"{COUCHDB_URL}/produk:{id_produk}").json()
-                    produk_cache[id_produk] = res_prod.get("nama_produk")
-                nama_produk = produk_cache.get(id_produk)
-
-                status_sewa = dp.get("status_sewa") 
-                status_pengembalian = dp.get("status_pengembalian")
-
+            for dp in ps.get("detail_pesanan", []):
                 hasil_akhir.append({
-                    "id_pengguna": id_pembeli,
-                    "nama": nama_user,
-                    "id_pesanan": id_pesanan,
+                    "id_pengguna": pembeli.get("id_pengguna"),
+                    "nama": pembeli.get("nama"),
+                    "id_pesanan": ps.get("id_pesanan"),
                     "tanggal_pesanan": ps.get("tanggal_pesanan", ""),
-                    "nama_produk": nama_produk,
+                    "nama_produk": dp.get("nama_produk"),
                     "jenis_transaksi": dp.get("jenis_transaksi"),
                     "harga": dp.get("harga"),
                     "status_pesanan": ps.get("status_pesanan"),
-                    "status_pembayaran": status_pembayaran,
+                    "status_pembayaran": pembayaran.get("status_pembayaran"),
                     "status_pengiriman": status_kirim,
-                    "status_sewa": status_sewa,
-                    "status_pengembalian": status_pengembalian
+                    "status_sewa": dp.get("status_sewa"),
+                    "status_pengembalian": dp.get("status_pengembalian")
                 })
         
-        total_diproses += len(pesanan_batch)
-        print(f"-> Berhasil memproses {total_diproses} dokumen")
+        skip += limit_per_batch
         
-        skip += limit_per_batch 
-
     hasil_akhir.sort(key=lambda x: str(x["id_pengguna"]))
-
     return hasil_akhir
 
 if __name__ == "__main__":
     start_time = time.perf_counter()
 
-    data_hasil = get_semua_riwayat_transaksi()
+    data_hasil = get_semua_riwayat_transaksi_denormalized()
 
     end_time = time.perf_counter()
     duration_ms = (end_time - start_time) * 1000
