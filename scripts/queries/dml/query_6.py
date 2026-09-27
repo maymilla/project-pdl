@@ -75,7 +75,7 @@ def batalkan_dan_refund():
 
         pesanan["status_pesanan"] = "dibatalkan"
         pesanan_to_update[pesanan["_id"]] = pesanan
-        id_pembayaran_needed.add(f"pembayaran:{pesanan['id_pembayaran']}")
+        id_pembayaran_needed.add(f"pembayaran:{pesanan.get("pembayaran", {}).get("id_pembayaran")}")
         hasil_temp.append(pesanan)
     
     t3 = time.perf_counter()
@@ -91,7 +91,7 @@ def batalkan_dan_refund():
     hasil = []
 
     for pesanan in hasil_temp:
-        pembayaran = pembayaran_map.get(f"pembayaran:{pesanan['id_pembayaran']}")
+        pembayaran = pembayaran_map.get(f"pembayaran:{pesanan.get("pembayaran", {}).get("id_pembayaran")}")
         status_pembayaran_baru = "-"
         if pembayaran is not None and pembayaran["status_pembayaran"] == "berhasil":
             pembayaran["status_pembayaran"] = "refund"
@@ -101,7 +101,7 @@ def batalkan_dan_refund():
         hasil.append({
             "id_pesanan": pesanan["id_pesanan"],
             "status_pesanan": "dibatalkan",
-            "id_pembayaran": pesanan["id_pembayaran"],
+            "id_pembayaran": pesanan.get("pembayaran", {}).get("id_pembayaran"),
             "status_pembayaran": status_pembayaran_baru,
         })
         
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     cetak_dan_simpan(
         judul="=== BATALKAN PESANAN + REFUND (GAGAL KIRIM > 7 HARI) ===",
         data=data_hasil,
-        output_file="results/dml/query_6_test.txt",
+        output_file="results/dml/query_6.txt",
         exec_time_ms=duration_ms,
         meta_extra=["Database : CouchDB (bulk read/write)"],
     )
