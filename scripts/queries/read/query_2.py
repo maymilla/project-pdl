@@ -13,8 +13,10 @@ def get_top_pengguna_belanja(client=None):
     client = client or ReadClient()
     totals = defaultdict(lambda: money(0))
     for order, payment_count in paid_orders(client):
+        id_pembeli = order.get("pembeli", {}).get("id_pengguna")
+        
         for detail in order.get("detail_pesanan") or []:
-            totals[clean_id(order["id_pembeli"])] += money(detail.get("harga")) * payment_count
+            totals[clean_id(id_pembeli)] += money(detail.get("harga")) * payment_count
     reviews = {
         clean_id(row["key"]): row["value"]
         for row in client.view("ulasan_per_pengguna", group=True)
